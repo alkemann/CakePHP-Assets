@@ -201,10 +201,10 @@
  * @author Eskil Mjelvaa Saadtvedt
  * @author Ronny Vindenes
  * @author Carl Erik Fyllingen
- * @modified 28 nov. 2008 by Alexander
+ * @modified 4 des. 2008 by Alexander
  * @category Cake Helper
  * @license MIT
- * @version 3.1.0
+ * @version 3.1.1
  *  
  **/
 App::import('Vendor', 'flashchart/open-flash-chart');
@@ -226,7 +226,7 @@ class FlashChartHelper extends AppHelper {
 	 *
 	 * @var string
 	 */
-	public $swf = 'open-flash-chart.swf';
+	public $swf = 'flash/open-flash-chart.swf';
 	
 	/**
 	 * The number data to be used to generate the charts. The dataset can be in any
