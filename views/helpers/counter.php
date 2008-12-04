@@ -8,18 +8,19 @@
  *
  */
 class CounterHelper extends AppHelper {	
-	public $helpers = array('Html', 'Javascript');
+	public $helpers = array('Flash');
 	
 	// location of the flash file relative to the webroot
-	private $swf = 'flash/fl_countdown_v3_3.swf';
+	public $swf = 'flash/fl_countdown_v3_3.swf';
+	
 	// default options for the render method
 	private $defaults = array(
-		'div' => 'counter',
 		'width' => 250,
 		'height' => 30,
 		'bgcolor' => 'FFFFFF',
 		'color' => '565656',
-		'sound' => false
+		'sound' => false,
+		'div' => false	
 	);
 	
 	/**
@@ -30,38 +31,31 @@ class CounterHelper extends AppHelper {
 	 * dom id (#counter by default). You can NOT style this div, as it
 	 * is REPLACED by the flashembed, not put inside it. 
 	 *
-	 * @example echo $counter->render(array('month'=>12,'day'=>24',array('bgcolor'=>'FF0000','color'=>'33DD33')));
-	 * @example echo $counter->render('2009-01-01 00:00:01',array(),true);
+	 * @example echo $counter->render(array('month'=>12,'day'=>24',array('div'=>'replace_me','bgcolor'=>'FF0000', 'color'=>'33DD33')));
+	 * @example echo $counter->render('2009-01-01 00:00:01');
 	 * @param mixed $date Either a dateformated string or an array with
 	 * 		these valid keys : 'year','month','day','hour','minute'
 	 * @param array $options valid keys : 'div','width','height','bgcolor','color','sound'
 	 * @param boolean $div TRUE to make helper render div tag
 	 * @return string
 	 */
-	public function render($date, $options = array(), $div = false) {
-		$date_array = $this->toArray($date);
+	public function render($date, $options = array()) {	
 		$options = am($this->defaults, $options);
-		if ($div && $options['div'] == 'counter') {
-			$options['div'] = 'c_'. substr(uniqid(),-10);
+		
+		if (is_array($date)) {
+			$date_array = $date;
+		} else {
+			$date_array = $this->toArray($date);
 		}
+		
 		$urlparams = $this->toParams($date_array);
 		$urlparams .= ($options['sound']) ? '&snd=on' : '&snd=off';
 		$urlparams .= '&co='.$options['color'];
-		$ret = $this->Javascript->link('swfobject');
-		$ret .= $this->Javascript->codeBlock('
-			var flashvars = {};
-		    var params = { 
-		    	wmode: "opaque",
-		    	bgcolor: "#'.$options['bgcolor'].'",
-		    	movie: "'.$urlparams.'",
-			};
-			var attributes = {};
-			swfobject.embedSWF("' . $this->Html->url($this->swf).$urlparams . '", "' . $options['div'] . '", "' . $options['width'] . '", "' . $options['height'] . '", "9.0.0", "", flashvars, params, attributes);
-		');
-		if ($div) {
-			$ret .= "<div id='{$options['div']}'></div>";
-		}
-		return $ret;
+		
+		$this->Flash->init();
+		return $this->Flash->renderSwf($this->swf.$urlparams, $options['width'], $options['height'], $options['div'], array(
+			'params' => array('wmode'=>'opaque','bgcolor'=>'#'.$options['bgcolor'],'movie'=>$urlparams)
+		));
 	}
 	
 	/**
@@ -69,25 +63,18 @@ class CounterHelper extends AppHelper {
 	 * create the proper url params for the swf to read. If sent in an array, it
 	 * will simply return it.
 	 *
-	 * @param mixed $date either an php date formated string or an array
+	 * @param string $date php date formated string
 	 * @return array
 	 */
 	private function toArray($date) {
-		if (is_array($date)) {
-			return $date;
-		}
-		$do = new DateTime($date);
-		$year = $do->format('Y');
-		$month = $do->format('n');
-		$day = $do->format('j');
-		$hour = $do->format('G');
-		$minute = $do->format('i');
+		$datetimeObject = new DateTime($date);
  		$ret = array(
-			'month' => $month,
-			'day' => $day,
-			'hour' => $hour,
- 			'min' => $minute
+			'month'=> $datetimeObject->format('n'),
+			'day'  => $datetimeObject->format('j'),
+			'hour' => $datetimeObject->format('G'),
+ 			'min'  => $datetimeObject->format('i')
 		);
+		$year = $datetimeObject->format('Y');
 		if ($year !== false) {
 			$ret['year'] = $year;
 		}
@@ -106,12 +93,13 @@ class CounterHelper extends AppHelper {
 			return '?mo=12&da=24';
 		} 
 		$ret = '?';
-		$do = new DateTime();
+		$datetimeObject = new DateTime();
+				
 		if (!isset($date_array['month'])) {
-			$date_array['month'] =$do->format('n');
+			$date_array['month'] =$datetimeObject->format('n');
 		}
 		if (!isset($date_array['day'])) {
-			$date_array['day'] = $do->format('j');		
+			$date_array['day'] = $datetimeObject->format('j');		
 		}
 		foreach (array('yr'=>'year','mo'=>'month','da'=>'day','ho'=>'hour','mi'=>'min') as $key => $type) {
 			if (isset($date_array[$type]) && is_numeric($date_array[$type])) {
