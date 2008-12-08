@@ -379,7 +379,7 @@ class FlashChartHelper extends AppHelper {
 	 * @param string $datasetName The name to be used to associate charts with data
 	 * @param string $chartId Name of chart. Use for seperate charts.
 	 */
-	public function setData($data, $numbersPath = '{n}', $labelsPath = false, $datasetName = 'default', $chartId = 'default') {
+	public function setData($data, $numbersPath = '{n}', $labelsPath = false, $datasetName = 'default') {
 	
 		$this->data[$datasetName] = $data;
 		if (is_string($numbersPath)) {
