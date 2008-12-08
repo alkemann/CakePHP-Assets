@@ -129,7 +129,7 @@
  *       $flashChart->setLegend('x','Dato');
  *       $flashChart->setLegend('y','Grade', '{color:#AA0aFF;font-size:40px;}' );
  *       
- *       $flashChart->axis('x',array('labels' => $labels,'tick_height' => 20,'vertical'=>true));
+ *       $flashChart->axis('x',array('labels' => $labels,'tick_height' => 20),array('vertical' => true,'colour'=>'#3399AA'));
  *       $flashChart->axis('y',array('range' => array(0, 6, 1),'labels' => array('','F','E','D','C','B','A')));
  *           
  *       $flashChart->setData($data,'/Event/value'); 
@@ -218,7 +218,7 @@
  * @modified 8 des. 2008 by Alexander
  * @category Cake Helper
  * @license MIT
- * @version 3.3.3
+ * @version 3.3.4
  *  
  **/
 App::import('Vendor', 'flashchart/open-flash-chart');
@@ -779,19 +779,20 @@ class FlashChartHelper extends AppHelper {
 	 * http://teethgrinder.co.uk/open-flash-chart-2/y-axis.php
 	 * 
 	 * @example $flashChart->axis('x'); //Sets labels from dataset
-	 * @example $flashChart->axis('x',array('labels'=>array('Things','To','Do'),'vertical'=>true)); 
+	 * @example $flashChart->axis('x',array('labels'=>array('Things','To','Do')),array('colour'=>'#aaFF33', 'vertical'=>true)); 
 	 * @example $flashChart->axis('y', array('range'=>array(0,50,5), 'tick_length'=>15);
 	 * @param string $axis 'x' or 'y'
 	 * @param array $options
+	 * @param array $labelsOptions used to customize x axis labels
 	 */
-	public function axis($axis, $options = array()) {
+	public function axis($axis, $options = array(), $labelsOptions = array()) {
 		$axis_object_name = $axis . '_axis';
 		$axis_set_method = 'set_' . $axis . '_axis';
 		$axis_object = new $axis_object_name();
 		
 		foreach ($options as $key => $setting) {
 			// special options set direcly bellow
-			if (in_array($key, array('labels', 'range', 'vertical')))
+			if (in_array($key, array('labels', 'range')))
 				continue;
 			$set_method = 'set_' . $key;
 			if (is_array($setting)) {
@@ -843,10 +844,13 @@ class FlashChartHelper extends AppHelper {
 			}
 		} 
 		if ($axis == 'x' && is_string($this->labelsPath) && !empty($this->labelsPath) ) {
-            if (isset($options['vertical']) && $options['vertical'] == true) {            
+            if (sizeof($labelsOptions) > 0) {            
                 $labels = Set::extract($this->data, $this->labelsPath);
-                $x_axis_label = new x_axis_labels;           
-                $x_axis_label->set_vertical();          
+                $x_axis_label = new x_axis_labels;        
+                foreach ($labelsOptions as $key => $setting) {   
+                    $set_method = 'set_' . $key;
+                    $x_axis_label->$set_method($setting);      
+                }    
                 $x_axis_label->set_labels($labels); 
                 $axis_object->set_labels($x_axis_label);
             } else {
