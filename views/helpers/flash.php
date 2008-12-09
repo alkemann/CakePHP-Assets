@@ -5,6 +5,13 @@
  * 
  *   http://code.google.com/p/swfobject/
  * 
+ *  IMPORTANT : This helper requires you to have the line 
+ *
+ *    echo $scripts_for_layout;
+ * 
+ *  in your layout.
+ * 
+ *
  * It has simply two functions, one is optional. If you wish to embed several
  * flash files into your view, you can initialize the helper (include the javascript
  * library) once and also set default options for all your subsequent calls.
