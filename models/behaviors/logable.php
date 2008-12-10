@@ -26,8 +26,9 @@
  * - "change"   	[string] : depending on setting either : 
  * 							[name (alek) => (Alek), age (28) => (29)] or [name, age]
  * 
- * - "version_id"	[int]	 : cooperates with VersionBehavior to link the the shadow table (thus linking to old data)
- * @todo implement version cooperation
+ * - "version_id"	[int]	 : cooperates with RevisionBehavior to link the the shadow table (thus linking to old data)
+ * 
+ * Remember that Logable behavior needs to be added after RevisionBehavior. In fact, just put it last to be safe.
  * 
  * Optionally register what user was responisble for the activity :
  * 
@@ -434,9 +435,13 @@ class LogableBehavior extends ModelBehavior
     			$logData['Log']['model_id'] = $Model->insertId;
     		}     		
     	}
-    	
+    
     	if (!isset($this->Log->_schema[ 'action' ])) {
     		unset($logData['Log']['action']);
+    	}
+    	
+    	if (isset($this->Log->_schema[ 'version_id' ]) && isset($Model->version_id)) {
+    		$logData['Log']['version_id'] = $Model->version_id;
     	}
     	
     	if (isset($this->Log->_schema[ 'ip' ]) && $this->userIP) {
