@@ -54,8 +54,8 @@
  * @co-author Ronny Vindenes
  * @co-author Carl Erik Fyllingen
  * @category Behavior
- * @version 1.3.4
- * @modified 14:48 17.nov. 2008 by alexander (model independent settings)
+ * @version 1.3.5
+ * @modified 10.des 2008 by alexander
  */
 
 class LogableBehavior extends ModelBehavior 
@@ -68,7 +68,8 @@ class LogableBehavior extends ModelBehavior
 			'userKey' => 'user_id',
 			'change' => 'list',
 			'description_ids' => TRUE,
-			'skip' => array()
+			'skip' => array(),
+			'ignore' => array()
 		);
 	/**
 	 * Cake called intializer
@@ -83,11 +84,11 @@ class LogableBehavior extends ModelBehavior
 	 * @param array $config
 	 */
 	function setup(&$Model, $config = array()) {
-		
 		if (!is_array($config)) {
 			$config = array();
 		}	
 		$this->settings[$Model->alias] = array_merge($this->defaults, $config);
+		$this->settings[$Model->alias]['ignore'][] = $Model->primaryKey; 
 				
 		App::import('model','Log');
 		$this->Log = new Log();
@@ -324,8 +325,7 @@ class LogableBehavior extends ModelBehavior
     
 	function beforeSave(&$Model) {
         if (isset($this->Log->_schema['change']) && $Model->id) {
-        	$Model->recursive = -1;
-        	$this->old = $Model->find(array($Model->primaryKey => $Model->id));
+        	$this->old = $Model->find('first',array('conditions'=>array($Model->primaryKey => $Model->id),'recursive'=>-1));
         }
         return true;
 	}
@@ -335,6 +335,11 @@ class LogableBehavior extends ModelBehavior
 			return true;
 		} elseif (isset($this->settings[$Model->alias]['skip']['edit']) && $this->settings[$Model->alias]['skip']['edit'] && !$created) {
 			return true;
+		}
+		$keys = array_keys($Model->data[$Model->alias]);
+		$diff = array_diff($keys,$this->settings[$Model->alias]['ignore']);
+		if (sizeof($diff) == 0) {
+			return false;
 		}
      	if ($Model->id) {
     		$id = $Model->id;
