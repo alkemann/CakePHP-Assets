@@ -2,7 +2,7 @@
 class MergePost extends CakeTestModel {
 	public $alias = 'Post';
 	public $name = 'MergePost';
-	public $actsAs = array('Merge');	
+	public $actsAs = array('Merge','Containable');	
 	public $belongsTo = array('Topic'=> array('className'=>'MergeTopic','foreignKey'=>'topic_id'));
 	public $hasAndBelongsToMany = array('Tag'=>array(
                 'className'=>'MergeTag',
@@ -41,7 +41,7 @@ class MergeCase extends CakeTestCase {
 		$this->Topic = new MergeTopic(); 
 	}	
 
-/*
+
  	function testDefaultMerge() {
 		$this->Post->merge(1,2);
 		$result = $this->Post->find('first',array('conditions'=>array('id'=>1),'recursive'=>-1));
@@ -121,11 +121,10 @@ class MergeCase extends CakeTestCase {
 		$this->assertEqual($result, $expected);
 		$this->assertFalse($this->Post->find('first',array('conditions'=>array('id'=>2),'recursive'=>-1)));		
 	}
-*/
+
 	function testBelongsTo() {
-		$result = $this->Post->find('first', array('conditions'=>array('Post.id'=>1),'recursive'=>0));
-		debug($result);
-        debug($this->Post->find('first', array('conditions'=>array('Post.id'=>1),'recursive'=>1)));
+	/** stupid containable */
+		$result = $this->Post->find('first', array('conditions'=>array('Post.id'=>1),'contain'=>'Topic'));
 		$expected = array(
 		    'Post' => array(
 		            'id' => 1,
@@ -141,7 +140,7 @@ class MergeCase extends CakeTestCase {
 		$this->assertEqual($result, $expected, 'BelongsTo fixture test : %s');
 		
 		$this->Post->merge(1,3,array('topic_id' => 'source'));
-		$result = $this->Post->find('first', array('conditions'=>array('Post.id'=>1),'recursive'=>0));
+		$result = $this->Post->find('first', array('conditions'=>array('Post.id'=>1),'contain'=>'Topic'));
 		$expected = array(
 		    'Post' => array(
 		            'id' => 1,
@@ -156,7 +155,7 @@ class MergeCase extends CakeTestCase {
 		);
 		$this->assertEqual($result, $expected, 'BelongsTo test : %s');		
 	}
-/*
+
 	function testHasManyDefault() {		
 		$result = $this->Topic->find('first', array('conditions'=>array('Topic.id'=>2),'recursive'=>1));
 		$this->assertEqual($result['Post'], array());
@@ -164,7 +163,7 @@ class MergeCase extends CakeTestCase {
 		$this->Topic->merge(2,3);		
 		$result = $this->Topic->find('first', array('conditions'=>array('Topic.id'=>2),'recursive'=>1));		
 		$expected = array(
-			0 => array(f
+			0 => array(
 				'id' => 3,
 				'title' => 'Food',
 				'body' => 'Apples are good',
@@ -768,7 +767,7 @@ class MergeCase extends CakeTestCase {
 		$this->Topic->unbindModel(array('hasOne'=>array('Post')),false);
 		$this->Topic->bindModel(array('hasMany'=>array('Post' => array('className'=>'MergePost','foreignKey'=>'topic_id','dependent'=>TRUE))),false);
 	}
-	*/
+	
 }
 
 ?>
