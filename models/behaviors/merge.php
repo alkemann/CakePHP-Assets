@@ -1,6 +1,6 @@
 <?php
 /**
- * Merge behavior v.0.9
+ * Merge behavior v.1.1
  * 
  * This behavior is an allpurpose behavior for merging two models into one, for example on a communal blog, a moderator
  * may want to merge two posts into one, joining the content body manually, keeping the title of the first and using
@@ -14,8 +14,8 @@
  * @co-author Carl Erik Fyllingen
  * @company Maritime Colours
  * @category Behavior
- * @version 1
- * @modified 17. nov. 2008 by alexander morland (model independent settings)
+ * @version 1.1
+ * @modified 18. des. 2008 by alexander morland 
  */
 class MergeBehavior extends ModelBehavior  {
 		
@@ -110,26 +110,26 @@ class MergeBehavior extends ModelBehavior  {
 			switch ($use) {
 				case 'neither': // delete or reset both
 					if ($dependent) {
-						$Model->{$className}->deleteAll(array($foreignKey=>array($source_id,$target_id)));
+						$Model->{$assoc_model}->deleteAll(array($foreignKey=>array($source_id,$target_id)));
 					} else {
-						$Model->{$className}->updateAll(array($foreignKey=>NULL),array($foreignKey=>array($source_id,$target_id)));
+						$Model->{$assoc_model}->updateAll(array($foreignKey=>NULL),array($foreignKey=>array($source_id,$target_id)));
 					}
 				break;
 				case 'target': // keep old target, delete or reset assoc for source
 					if ($dependent) {
-						$Model->{$className}->deleteAll(array($foreignKey=>array($source_id)));
+						$Model->{$assoc_model}->deleteAll(array($foreignKey=>array($source_id)));
 					} else {
-						$Model->{$className}->updateAll(array($foreignKey=>NULL),array($foreignKey=>$source_id));
+						$Model->{$assoc_model}->updateAll(array($foreignKey=>NULL),array($foreignKey=>$source_id));
 					}
 					
 				break;
 				case 'source': // delete or reset target, use source
 					if ($dependent) {
-						$Model->{$className}->deleteAll(array($foreignKey=>array($target_id)));
+						$Model->{$assoc_model}->deleteAll(array($foreignKey=>array($target_id)));
 					} else {
-						$Model->{$className}->updateAll(array($foreignKey=>NULL),array($foreignKey=>$target_id));
+						$Model->{$assoc_model}->updateAll(array($foreignKey=>NULL),array($foreignKey=>$target_id));
 					}
-					$Model->{$className}->updateAll(array($foreignKey=>$target_id),array($foreignKey=>$source_id));					
+					$Model->{$assoc_model}->updateAll(array($foreignKey=>$target_id),array($foreignKey=>$source_id));					
 				break;
 				default:
 					return FALSE;				
@@ -153,29 +153,29 @@ class MergeBehavior extends ModelBehavior  {
 			}
 			switch ($use) {
 				case 'both':
-					$Model->{$className}->updateAll(array($foreignKey=>$target_id),array($foreignKey=>$source_id));
+					$Model->{$assoc_model}->updateAll(array($foreignKey=>$target_id),array($foreignKey=>$source_id));
 				break;
 				case 'neither':
 					if ($dependent) {
-						$Model->{$className}->deleteAll(array($foreignKey=>array($source_id,$target_id)));
+						$Model->{$assoc_model}->deleteAll(array($foreignKey=>array($source_id,$target_id)));
 					} else {
-						$Model->{$className}->updateAll(array($foreignKey=>NULL),array($foreignKey=>array($source_id,$target_id)));						
+						$Model->{$assoc_model}->updateAll(array($foreignKey=>NULL),array($foreignKey=>array($source_id,$target_id)));						
 					}					
 				break;
 				case 'target':
 					if ($dependent) {
-						$Model->{$className}->deleteAll(array($foreignKey=>array($source_id)));
+						$Model->{$assoc_model}->deleteAll(array($foreignKey=>array($source_id)));
 					} else {
-						$Model->{$className}->updateAll(array($foreignKey=>NULL),array($foreignKey=>$source_id));						
+						$Model->{$assoc_model}->updateAll(array($foreignKey=>NULL),array($foreignKey=>$source_id));						
 					}						
 				break;
 				case 'source':
 					if ($dependent) {
-						$Model->{$className}->deleteAll(array($foreignKey=>array($target_id)));
+						$Model->{$assoc_model}->deleteAll(array($foreignKey=>array($target_id)));
 					} else {
-						$Model->{$className}->updateAll(array($foreignKey=>NULL),array($foreignKey=>$target_id));						
+						$Model->{$assoc_model}->updateAll(array($foreignKey=>NULL),array($foreignKey=>$target_id));						
 					}	
-					$Model->{$className}->updateAll(array($foreignKey=>$target_id),array($foreignKey=>$source_id));
+					$Model->{$assoc_model}->updateAll(array($foreignKey=>$target_id),array($foreignKey=>$source_id));
 				break;
 				default:
 					return FALSE;
@@ -188,7 +188,7 @@ class MergeBehavior extends ModelBehavior  {
 			$foreignKey = $assoc_setup['foreignKey'];
 			//$assocForeignKey = $assoc_setup['associationForeignKey'];
 			
-			$joinModel = $Model->alias . 's'  . $className;
+			$joinModel = $Model->name . 's'  . $className;
 			
 			if ( (!isset($assoc_options[$assoc_model]) && !isset($assoc_options['habtm'][$assoc_model])) ) {
 				$use = 'both'; // default behaviour
