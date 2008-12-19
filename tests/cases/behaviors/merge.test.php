@@ -24,8 +24,7 @@ class MergeTopic extends CakeTestModel {
 class MergeTag extends CakeTestModel {
 	public $alias = 'Tag';
 	public $name = 'MergeTag';
-	public $useDbConfig = 'test';
-	
+	public $useDbConfig = 'test';	
 }
 
 class MergePostsMergeTag extends CakeTestModel {
@@ -40,9 +39,9 @@ class MergeCase extends CakeTestCase {
 		parent::start();
 		$this->Post = new MergePost(); 
 		$this->Topic = new MergeTopic(); 
-	//	$this->Post->MergePostsMergeTag = new MergePostsMergeTag();
 	}	
 
+/*
  	function testDefaultMerge() {
 		$this->Post->merge(1,2);
 		$result = $this->Post->find('first',array('conditions'=>array('id'=>1),'recursive'=>-1));
@@ -122,11 +121,11 @@ class MergeCase extends CakeTestCase {
 		$this->assertEqual($result, $expected);
 		$this->assertFalse($this->Post->find('first',array('conditions'=>array('id'=>2),'recursive'=>-1)));		
 	}
-
+*/
 	function testBelongsTo() {
-        debug($this->Post->find('all', array('conditions'=>array('Post.id'=>1))));
 		$result = $this->Post->find('first', array('conditions'=>array('Post.id'=>1),'recursive'=>0));
 		debug($result);
+        debug($this->Post->find('first', array('conditions'=>array('Post.id'=>1),'recursive'=>1)));
 		$expected = array(
 		    'Post' => array(
 		            'id' => 1,
@@ -157,7 +156,7 @@ class MergeCase extends CakeTestCase {
 		);
 		$this->assertEqual($result, $expected, 'BelongsTo test : %s');		
 	}
-
+/*
 	function testHasManyDefault() {		
 		$result = $this->Topic->find('first', array('conditions'=>array('Topic.id'=>2),'recursive'=>1));
 		$this->assertEqual($result['Post'], array());
@@ -165,7 +164,7 @@ class MergeCase extends CakeTestCase {
 		$this->Topic->merge(2,3);		
 		$result = $this->Topic->find('first', array('conditions'=>array('Topic.id'=>2),'recursive'=>1));		
 		$expected = array(
-			0 => array(
+			0 => array(f
 				'id' => 3,
 				'title' => 'Food',
 				'body' => 'Apples are good',
@@ -769,7 +768,7 @@ class MergeCase extends CakeTestCase {
 		$this->Topic->unbindModel(array('hasOne'=>array('Post')),false);
 		$this->Topic->bindModel(array('hasMany'=>array('Post' => array('className'=>'MergePost','foreignKey'=>'topic_id','dependent'=>TRUE))),false);
 	}
-	
+	*/
 }
 
 ?>
