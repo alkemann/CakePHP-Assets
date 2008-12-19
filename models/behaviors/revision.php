@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 1.0.1 Beta
+ * Revision Behavior 1.0.2
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -35,7 +35,7 @@
  * model basis with the useDbConfig config option.
  * 
  * Add the same fields as in the live table, with 3 important differences. 
- *  - The 'id' field shout NOT be the primary key, nor auto increment
+ *  - The 'id' field should NOT be the primary key, nor auto increment
  *  - Add the fields 'version_id' (int, primary key, autoincrement) and 
  *    'version_created' (datetime)
  *  - Skipp fields that should not be saved in shadowtable (lft,right,weight for instance)
@@ -71,8 +71,8 @@
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 12. desemeber 2008
- * @version 1.0.1 BETA
+ * @modifed 18. desemeber 2008
+ * @version 1.0.2
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -127,7 +127,7 @@ class RevisionBehavior extends ModelBehavior {
 	 */
 	public function createRevision(&$Model) {	
 		if (is_null($Model->id)) {
-			die('RevisionBehavior: Model::id must be set');
+			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
 		}
 		$Model->read();
 		$ShadowModel = $this->createShadowModel($Model);
@@ -150,7 +150,7 @@ class RevisionBehavior extends ModelBehavior {
 	 */
 	public function diff(&$Model, $from_version_id = null, $to_version_id = null, $options = array()) {
 		if (is_null($Model->id)) {
-			die('RevisionBehavior: Model::id must be set');
+			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
 		}
 		if (isset($options['conditions'])) {
 			$conditions = am($options['conditions'],array($Model->primaryKey => $Model->id));	
@@ -222,7 +222,7 @@ class RevisionBehavior extends ModelBehavior {
 	 */
 	public function newest(&$Model, $options = array()) {
 		if (is_null($Model->id)) {
-			die('RevisionBehavior: Model::id must be set');
+			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
 		}
 		if (isset($options['conditions'])) {
 			$options['conditions'] = am($options['conditions'],array($Model->primaryKey => $Model->id));	
@@ -244,7 +244,7 @@ class RevisionBehavior extends ModelBehavior {
 	 */
 	public function oldest(&$Model, $options = array()) {
 		if (is_null($Model->id)) {
-			die('RevisionBehavior: Model::id must be set');
+			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
 		}
 		if (isset($options['conditions'])) {
 			$options['conditions'] = am($options['conditions'],array($Model->primaryKey => $Model->id));	
@@ -265,7 +265,7 @@ class RevisionBehavior extends ModelBehavior {
 	 */
 	public function previous(&$Model, $options = array()) {
 		if (is_null($Model->id)) {
-			die('RevisionBehavior: Model::id must be set');
+			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
 		}
 		$options['limit'] = 1;
 		$options['page'] = 2;		
@@ -292,7 +292,7 @@ class RevisionBehavior extends ModelBehavior {
 	 */
 	public function revertTo(&$Model, $version_id) {
 		if (is_null($Model->id)) {
-			die('RevisionBehavior: Model::id must be set');
+			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
 		}
 		$data = $this->shadow($Model,'first',array('conditions'=>array('version_id'=>$version_id)));
 		if (sizeof($data) != 1) {
@@ -315,7 +315,7 @@ class RevisionBehavior extends ModelBehavior {
 	 */
 	public function revertToDate(&$Model, $datetime, $cascade = false) {
 		if (is_null($Model->id)) {
-			die('RevisionBehavior: Model::id must be set');
+			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
 		}
 		if ($cascade) {		
 			$associated = array_merge($Model->hasMany, $Model->hasOne);
@@ -348,7 +348,7 @@ class RevisionBehavior extends ModelBehavior {
 	 */
 	public function revisions(&$Model, $options = array()) {
 		if (is_null($Model->id)) {
-			die('RevisionBehavior: Model::id must be set');
+			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
 		}
 		if (isset($options['conditions'])) {
 			$options['conditions'] = am($options['conditions'],array($Model->primaryKey => $Model->id));	
@@ -383,7 +383,7 @@ class RevisionBehavior extends ModelBehavior {
 	 */
 	public function undelete(&$Model) {
 		if (is_null($Model->id)) {
-			die('RevisionBehavior: Model::id must be set');
+			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
 		}
 		if  ($Model->read()) {
 			return false;
@@ -423,7 +423,7 @@ class RevisionBehavior extends ModelBehavior {
 	 */
 	public function undo(&$Model) {	
 		if (is_null($Model->id)) {
-			die('RevisionBehavior: Model::id must be set');
+			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
 		}
 		$data = $this->previous($Model);
 		return $Model->save($data);
