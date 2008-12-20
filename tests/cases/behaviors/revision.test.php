@@ -93,6 +93,23 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertEqual($expected, $result);
 	}
 	
+	function testSaveWithoutChange() {	
+		$this->RevisionPost->id = 1;
+        $this->RevisionPost->createRevision();
+	
+		$this->RevisionPost->id = 1;
+		$count = $this->RevisionPost->shadow('count', array('conditions'=>array('id'=>1)));
+		$this->assertEqual($count,1);
+		
+		$this->RevisionPost->id = 1;
+		$data = $this->RevisionPost->read();
+		$this->RevisionPost->save($data);
+		
+		$this->RevisionPost->id = 1;
+		$count = $this->RevisionPost->shadow('count', array('conditions'=>array('id'=>1)));
+		$this->assertEqual($count,1);
+	}
+	
 	function testEditPost() {
 		$data = array('RevisionPost' => array( 'title' => 'New Post'));
 		$this->RevisionPost->create();
