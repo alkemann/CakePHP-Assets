@@ -482,11 +482,25 @@ class RevisionBehavior extends ModelBehavior {
 		}
        	$this->old = $Model->find('first', array(
        		'recursive' => -1,
-       		'conditions'=>array($Model->primaryKey => $Model->id)));
+       		'conditions'=>array($Model->alias.'.'.$Model->primaryKey => $Model->id)));
         return true;
 	}
 
-		
+	/**
+	 * Returns a generic model that maps to the current $Model's shadow table.
+	 *
+	 * @param object $Model
+	 * @return object
+	 */
+	private function createShadowModel(&$Model) {		
+		$table = $this->getShadowTable($Model);
+		$ShadowModel = new Model(false, $table);
+		$ShadowModel->alias = $Model->alias;
+		$ShadowModel->primaryKey = 'version_id';
+		$ShadowModel->order = 'version_created DESC, version_id DESC';
+		return $ShadowModel;
+	}
+	
 	/**
 	 * Returns either the shadow table of $Model or false if it doesnt exist
 	 *
@@ -509,20 +523,6 @@ class RevisionBehavior extends ModelBehavior {
 		return $table;
 	}
 	
-	/**
-	 * Returns a generic model that maps to the current $Model's shadow table.
-	 *
-	 * @param object $Model
-	 * @return object
-	 */
-	private function createShadowModel(&$Model) {		
-		$table = $this->getShadowTable($Model);
-		$ShadowModel = new Model(false, $table);
-		$ShadowModel->alias = $Model->alias;
-		$ShadowModel->primaryKey = 'version_id';
-		$ShadowModel->order = 'version_created DESC, version_id DESC';
-		return $ShadowModel;
-	}
 	
 }
 ?>
