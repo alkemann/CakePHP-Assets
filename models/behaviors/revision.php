@@ -22,15 +22,15 @@
  * 
  *  - Place the newest version of RevisionBehavior in your app/models/behaviors folder
  *  - Add the behavior to AppModel (or single models if you prefer)
- *  - Create a shadow table for each model that you want revision for
+ *  - Create a shadow table for each model that you want revision for.
  *  - Behavior will gracefully do nothing for models that has behavior, without table
  *  - If adding to an existing project, run the initializeRevisions() method once for each model.
  * 
  * About shadow tables :
  * 
  * You should make these AFTER you have baked your ordinary tables as they may interfer. By default
- * the tables should be named rev_[normal table name]. If you wish to change the prefix you may
- * do so in the property called $revision_prefix found bellow. Also by default the behavior expects
+ * the tables should be named "[prefix][model_table_name]_revs" If you wish to change the suffix you may
+ * do so in the property called $revision_suffix found bellow. Also by default the behavior expects
  * the revision tables to be in the same dbconfig as the model, but you may change this on a per 
  * model basis with the useDbConfig config option.
  * 
