@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 1.0.2
+ * Revision Behavior 1.1
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -71,8 +71,8 @@
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 18. desemeber 2008
- * @version 1.0.2
+ * @modifed 26. desemeber 2008
+ * @version 1.1
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -90,7 +90,7 @@ class RevisionBehavior extends ModelBehavior {
 	 * @access private
 	 * @var string
 	 */
-	private $revision_prefix = 'rev_';
+	private $revision_suffix = '_revs';
 	/**
 	 * Defaul setting values
 	 *
@@ -110,12 +110,13 @@ class RevisionBehavior extends ModelBehavior {
      * @param object $Model
      * @param array $config
      */
-	public function setup($Model, $config = null) {	
+	public function setup(&$Model, $config = null) {	
 		if (is_array($config)) {
 			$this->settings[$Model->alias] = array_merge($this->defaults, $config);			
 		} else {
 			$this->settings[$Model->alias] = $this->defaults;
-		}			       
+		}		
+		$Model->ShadowModel = $this->createShadowModel($Model);	
 	}
 
 	/**
@@ -130,10 +131,9 @@ class RevisionBehavior extends ModelBehavior {
 			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
 		}
 		$Model->read();
-		$ShadowModel = $this->createShadowModel($Model);
 		$data = $Model->data;		
-		$data[$ShadowModel->alias]['version_created'] = date('Y-m-d h:i:s');
-		return $ShadowModel->save($data,false);
+		$data[$Model->ShadowModel->alias]['version_created'] = date('Y-m-d h:i:s');
+		return $Model->ShadowModel->save($data,false);
 	}
 	
 	/**
@@ -193,19 +193,18 @@ class RevisionBehavior extends ModelBehavior {
 	 * @return boolean 
 	 */
 	public function initializeRevisions($Model) {
-		$ShadowModel = $this->createShadowModel($Model);
-		if ($ShadowModel->table == false) {
+		if ($Model->ShadowModel->useTable == false) {
 			die('RevisionBehavior: Missing shadowtable : '.$this->revision_prefix.$Model->table);
 		}
-		if ($ShadowModel->find('count') != 0) {
+		if ($Model->ShadowModel->find('count') != 0) {
 			return false;
 		}
 		$all = $Model->find('all');
 		$version_created = date('Y-m-d h:i:s');
 		foreach ($all as $data) {
-			$data[$ShadowModel->alias]['version_created'] = $version_created;
-			$ShadowModel->create($data);
-			$ShadowModel->save();
+			$data[$Model->ShadowModel->alias]['version_created'] = $version_created;
+			$Model->ShadowModel->create($data);
+			$Model->ShadowModel->save();
 		}
 		return true;
 	}
@@ -368,8 +367,7 @@ class RevisionBehavior extends ModelBehavior {
 	 * @return array
 	 */
 	public function shadow(&$Model, $type = 'first', $options = array()) {
-		$ShadowModel = $this->createShadowModel($Model);	
-		return $ShadowModel->find($type,$options);
+		return $Model->ShadowModel->find($type,$options);
 	}
 
 	/**
@@ -440,8 +438,10 @@ class RevisionBehavior extends ModelBehavior {
 	public function afterSave(&$Model) {
 		if ($this->settings[$Model->alias]['auto'] === false) {
 			return true;
-		}
-		$ShadowModel = $this->createShadowModel($Model);
+		}		
+		if (!$Model->ShadowModel) {
+            return true;
+		}   
 		$data = $Model->findById($Model->id);
 		$changeDetected = false;
 		foreach ($data[$Model->alias] as $key => $value) {
@@ -457,14 +457,17 @@ class RevisionBehavior extends ModelBehavior {
    		if (!$changeDetected) {
    			return true;
    		}
-		$data[$ShadowModel->alias]['version_created'] = date('Y-m-d h:i:s');
-		$ShadowModel->save($data,false);
-		$Model->version_id = $ShadowModel->id;
+		$data[$Model->ShadowModel->alias]['version_created'] = date('Y-m-d h:i:s');
+		$Model->ShadowModel->save($data,false);
+		$Model->version_id = $Model->ShadowModel->id;
 		if (is_numeric($this->settings[$Model->alias]['limit'])) {
-			$count = $ShadowModel->find('count', array('conditions'=>array($Model->primaryKey => $Model->id)));
+            $conditions = array('conditions'=>array($Model->alias.'.'.$Model->primaryKey => $Model->id));
+			$count = $Model->ShadowModel->find('count', $conditions);
 			if ($count > $this->settings[$Model->alias]['limit']) {
-				$oldest = $this->oldest($Model);
-				$ShadowModel->delete($oldest[$Model->alias][$ShadowModel->primaryKey]);	
+                $conditions['order'] = $Model->alias.'.version_created ASC, '.$Model->alias.'.version_id ASC';
+				$oldest = $Model->ShadowModel->find('first',$conditions);
+				$Model->ShadowModel->id = null;
+				$Model->ShadowModel->del($oldest[$Model->alias][$Model->ShadowModel->primaryKey]);	
 			}			
 		}
 		return true;
@@ -480,6 +483,11 @@ class RevisionBehavior extends ModelBehavior {
 		if ($this->settings[$Model->alias]['auto'] === false) {
 			return true;
 		}
+		if (!$Model->ShadowModel) {
+            return true;
+		}   
+		$Model->ShadowModel->id = null;
+		$Model->ShadowModel->create();
        	$this->old = $Model->find('first', array(
        		'recursive' => -1,
        		'conditions'=>array($Model->alias.'.'.$Model->primaryKey => $Model->id)));
@@ -492,37 +500,26 @@ class RevisionBehavior extends ModelBehavior {
 	 * @param object $Model
 	 * @return object
 	 */
-	private function createShadowModel(&$Model) {		
-		$table = $this->getShadowTable($Model);
-		$ShadowModel = new Model(false, $table);
-		$ShadowModel->alias = $Model->alias;
-		$ShadowModel->primaryKey = 'version_id';
-		$ShadowModel->order = 'version_created DESC, version_id DESC';
-		return $ShadowModel;
-	}
-	
-	/**
-	 * Returns either the shadow table of $Model or false if it doesnt exist
-	 *
-	 * @param object $Model
-	 * @return string
-	 */
-	private function getShadowTable(&$Model) {		
+	private function createShadowModel(&$Model) {	
 		if (is_null($this->settings[$Model->alias]['useDbConfig'])) {
 			$dbConfig = $Model->useDbConfig;
-		} else {		
+		} else {
 			$dbConfig = $this->settings[$Model->alias]['useDbConfig'];			
-		}		
+		}	
+		$table = $Model->useTable .$this->revision_suffix;	
 		$db = & ConnectionManager::getDataSource($dbConfig);
-		$prefix = $db->config['prefix'];
-		$table = $prefix . $this->revision_prefix . Inflector::tableize($Model->name);	
+		$prefix = $Model->tablePrefix ? $Model->tablePrefix : $db->config['prefix'];
 		$tables = $db->listSources();
-		if (!in_array($table, $tables)) {			
-			return false;
-		}
-		return $table;
+		if (!in_array($table, $tables)) {
+            return false;
+		} 	
+		$Model->ShadowModel = new Model(false, $table, $dbConfig);	
+		$Model->ShadowModel->tablePrefix = $prefix;
+		$Model->ShadowModel->alias = $Model->alias;
+		$Model->ShadowModel->primaryKey = 'version_id';
+		$Model->ShadowModel->order = 'version_created DESC, version_id DESC';
+		return $Model->ShadowModel;
 	}
-	
-	
+
 }
 ?>

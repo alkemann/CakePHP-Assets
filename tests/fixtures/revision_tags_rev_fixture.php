@@ -1,7 +1,7 @@
 <?php
 
-class RevRevisionTagFixture extends CakeTestFixture {
-	var $name = 'RevRevisionTag';
+class RevisionTagsRevFixture extends CakeTestFixture {
+	var $name = 'RevisionTagsRev';
 	var $fields = array(	
 			'version_id' => array('type' => 'integer','null' => false,'default' => NULL,'key' => 'primary'), 
 			'version_created' => array('type' => 'datetime', 'null' => false, 'default' => NULL),

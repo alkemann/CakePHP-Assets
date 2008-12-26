@@ -1,9 +1,10 @@
 <?php
 class RevisionPost extends CakeTestModel {
+    var $name = 'RevisionPost';
+    var $alias = 'Post';
 	var $actsAs = array('Revision' => array('limit'=>5));
 	
 	function beforeUndelete() {
-		$this->data['RevisionPost']['created'] = '2010-01-01';
 		return true;
 	}
 	
@@ -13,77 +14,84 @@ class RevisionPost extends CakeTestModel {
 }
 
 class RevisionArticle extends CakeTestModel {
+    var $name = 'RevisionArticle';
+    var $alias = 'Article';
 	var $actsAs = array('Revision' => array('ignore'=>array('title')),'Tree');
 }
 
 class RevisionUser extends CakeTestModel {
+    var $name = 'RevisionUser';
+    var $alias = 'User';
 	var $actsAs = array('Revision');
 }
 
 class RevisionComment extends CakeTestModel {
+    var $name = 'RevisionComment';
+    var $alias = 'Comment';
 	var $actsAs = array('Revision');
 	
-	var $hasMany = array('RevisionVote'=>array('className' => 'RevisionVote',
+	var $hasMany = array('Vote'=>array('className' => 'RevisionVote',
 								'foreignKey' => 'revision_comment_id',
-								'dependent' => false));
+								'dependent' => true));
 }
 
 class RevisionVote extends CakeTestModel {
+    var $name = 'RevisionVote';
+    var $alias = 'Vote';
 	var $actsAs = array('Revision');
 }
 
 class RevisionTag extends CakeTestModel {
+    var $name = 'RevisionTag';
+    var $alias = 'Tag';
 	var $actsAs = array('Revision');
 }
 
 class RevisionTestCase extends CakeTestCase {
 	var $fixtures = array(
 			'app.revision_article', 
-			'app.rev_revision_article', 
+			'app.revision_articles_rev', 
 			'app.revision_post', 
-			'app.rev_revision_post', 
+			'app.revision_posts_rev', 
 			'app.revision_user',
 			'app.revision_comment',
-			'app.rev_revision_comment',
+			'app.revision_comments_rev',
 			'app.revision_vote',
-			'app.rev_revision_vote',
+			'app.revision_votes_rev',
 			'app.revision_tag',
-			'app.rev_revision_tag');
+			'app.revision_tags_rev');
 	
-	var $RevisionPost;
-	var $RevisionArticle;
-	var $RevisionUser;
-	var $RevisionComment;
-	var $RevisionVote;
-	var $RevisionTag;
+	var $Post;
+	var $Article;
+	var $User;
+	var $Comment;
+	var $Vote;
+	var $Tag;
 	
 	function startTest() {
-		$this->RevisionPost = & new RevisionPost();
-		$this->RevisionArticle = & new RevisionArticle();
-		$this->RevisionUser = & new RevisionUser();
-		$this->RevisionComment = & new RevisionComment();
-		$this->RevisionVote = & new RevisionVote();
-		$this->RevisionTag = & new RevisionTag();				
+		$this->Post = & new RevisionPost();
+        $this->Article = & new RevisionArticle();
+		$this->User = & new RevisionUser();
+		$this->Comment = & new RevisionComment();
+		$this->Tag = & new RevisionTag();				
 	}
 	
 	function endTest() {
-		unset($this->RevisionPost);
-		unset($this->RevisionArticle);
-		unset($this->RevisionUser);
-		unset($this->RevisionComment);
-		unset($this->RevisionVote);
-		unset($this->RevisionTag);
+		unset($this->Post);
+		unset($this->Article);
+		unset($this->User);
+		unset($this->Comment);
+		unset($this->Tag);
 		ClassRegistry::flush();
 	}
 	
 	function testSavePost() {
-		$data = array('RevisionPost' => array('title' => 'New Post', 'content' => 'First post!'));
-		$this->RevisionPost->save($data);
-		
-		$this->RevisionPost->id = 4;
-		$result = $this->RevisionPost->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
+		$data = array('Post' => array('title' => 'New Post', 'content' => 'First post!'));
+		$this->Post->save($data);
+		$this->Post->id = 4;
+		$result = $this->Post->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
 		$expected = array(
-			'RevisionPost' => array(
+			'Post' => array(
 				'id' => 4, 
 				'title' => 'New Post', 
 				'content' => 'First post!', 
@@ -94,35 +102,34 @@ class RevisionTestCase extends CakeTestCase {
 	}
 	
 	function testSaveWithoutChange() {	
-		$this->RevisionPost->id = 1;
-        $this->RevisionPost->createRevision();
+		$this->Post->id = 1;
+        $this->Post->createRevision();
 	
-		$this->RevisionPost->id = 1;
-		$count = $this->RevisionPost->shadow('count', array('conditions'=>array('id'=>1)));
+		$this->Post->id = 1;
+		$count = $this->Post->shadow('count', array('conditions'=>array('id'=>1)));
 		$this->assertEqual($count,1);
 		
-		$this->RevisionPost->id = 1;
-		$data = $this->RevisionPost->read();
-		$this->RevisionPost->save($data);
+		$this->Post->id = 1;
+		$data = $this->Post->read();
+		$this->Post->save($data);
 		
-		$this->RevisionPost->id = 1;
-		$count = $this->RevisionPost->shadow('count', array('conditions'=>array('id'=>1)));
+		$this->Post->id = 1;
+		$count = $this->Post->shadow('count', array('conditions'=>array('id'=>1)));
 		$this->assertEqual($count,1);
 	}
 	
 	function testEditPost() {
-		$data = array('RevisionPost' => array( 'title' => 'New Post'));
-		$this->RevisionPost->create();
-		$this->RevisionPost->save($data);
+		$data = array('Post' => array( 'title' => 'New Post'));
+		$this->Post->create();
+		$this->Post->save($data);
+		$this->Post->create();
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post'));
+		$this->Post->save($data);
 		
-		$this->RevisionPost->create();
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post'));
-		$this->RevisionPost->save($data);
-		
-		$this->RevisionPost->id = 1;				
-		$result = $this->RevisionPost->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
+		$this->Post->id = 1;				
+		$result = $this->Post->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
 		$expected = array(
-			'RevisionPost' => array(
+			'Post' => array(
 				'id' => 1, 
 				'title' => 'Edited Post', 
 				'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.', 
@@ -131,26 +138,26 @@ class RevisionTestCase extends CakeTestCase {
 		);
 		$this->assertEqual($expected, $result);
 	}
-	
+
 	function testShadow() {
 		 
-		$this->RevisionPost->create();
-		$data = array('RevisionPost' => array('title' => 'Non Used Post' , 'content' => 'Whatever'));
-		$this->RevisionPost->save($data);
+		$this->Post->create();
+		$data = array('Post' => array('title' => 'Non Used Post' , 'content' => 'Whatever'));
+		$this->Post->save($data);
 		
-		$this->RevisionPost->create();
-		$data = array('RevisionPost' => array('title' => 'New Post 1' , 'content' => 'nada'));
-		$this->RevisionPost->save($data);
+		$this->Post->create();
+		$data = array('Post' => array('title' => 'New Post 1' , 'content' => 'nada'));
+		$this->Post->save($data);
 		
-		$data = array('RevisionPost' => array('id'=>5, 'title' => 'Edit Post 2'));
-		$this->RevisionPost->save($data);
+		$data = array('Post' => array('id'=>5, 'title' => 'Edit Post 2'));
+		$this->Post->save($data);
 		
-		$data = array('RevisionPost' => array( 'id'=>5,'title' => 'Edit Post 3'));
-		$this->RevisionPost->save($data);
+		$data = array('Post' => array( 'id'=>5,'title' => 'Edit Post 3'));
+		$this->Post->save($data);
 		
-		$result = $this->RevisionPost->shadow('first',array('fields' => array('version_id','id','title','content')));
+		$result = $this->Post->shadow('first',array('fields' => array('version_id','id','title','content')));
 		$expected = array( 
-			'RevisionPost' => array(
+			'Post' => array(
 	            'version_id' => 5,
 	            'id' => 5,
 	            'title' => 'Edit Post 3',
@@ -159,12 +166,12 @@ class RevisionTestCase extends CakeTestCase {
 		);
 		$this->assertEqual($expected, $result);
 		
-		$result = $this->RevisionPost->shadow('first',array(
+		$result = $this->Post->shadow('first',array(
 			'conditions' => array('id'=>4),
 			'fields' => array('version_id','id','title','content')));
 		
 		$expected = array( 
-			'RevisionPost' => array(
+			'Post' => array(
 	            'version_id' => 2,
 	            'id' => 4,
 	            'title' => 'Non Used Post',
@@ -175,18 +182,18 @@ class RevisionTestCase extends CakeTestCase {
 	}
 	
 	function testCurrentPost() {
-		$this->RevisionPost->create();
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post'));
-		$this->RevisionPost->save($data);
+		$this->Post->create();
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post'));
+		$this->Post->save($data);
 		
-		$this->RevisionPost->create();
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Re-edited Post'));
-		$this->RevisionPost->save($data);
+		$this->Post->create();
+		$data = array('Post' => array('id'=>1, 'title' => 'Re-edited Post'));
+		$this->Post->save($data);
 		
-		$this->RevisionPost->id = 1;				
-		$result = $this->RevisionPost->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
+		$this->Post->id = 1;				
+		$result = $this->Post->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
 		$expected = array(
-			'RevisionPost' => array(
+			'Post' => array(
 				'id' => 1, 
 				'title' => 'Re-edited Post', 
 				'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.', 
@@ -195,21 +202,21 @@ class RevisionTestCase extends CakeTestCase {
 		);
 		$this->assertEqual($expected, $result);
 	}
-	
+
 	function testRevisionsPost() {
-		$this->RevisionPost->create();
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post'));
-		$this->RevisionPost->save($data);
+		$this->Post->create();
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post'));
+		$this->Post->save($data);
 		
-		$this->RevisionPost->create();
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Re-edited Post'));
-		$this->RevisionPost->save($data);
+		$this->Post->create();
+		$data = array('Post' => array('id'=>1, 'title' => 'Re-edited Post'));
+		$this->Post->save($data);
 		
-		$this->RevisionPost->id = 1;				
-		$result = $this->RevisionPost->revisions(array('fields' => array('id', 'title', 'content', 'version_id')));
+		$this->Post->id = 1;				
+		$result = $this->Post->revisions(array('fields' => array('id', 'title', 'content', 'version_id')));
 		$expected = array( 
 			0 => array(
-				'RevisionPost' => array(
+				'Post' => array(
 					'id' => 1, 
 					'title' => 'Re-edited Post', 
 					'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.', 
@@ -217,7 +224,7 @@ class RevisionTestCase extends CakeTestCase {
 				)
 			),
 			1 => array (
-				'RevisionPost' => array(
+				'Post' => array(
 					'id' => 1, 
 					'title' => 'Edited Post', 
 					'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.', 
@@ -229,17 +236,17 @@ class RevisionTestCase extends CakeTestCase {
 	}
 	
 	function testDiff() {
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post 1'));
-		$this->RevisionPost->save($data);
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post 2'));
-		$this->RevisionPost->save($data);
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post 3'));
-		$this->RevisionPost->save($data);
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post 1'));
+		$this->Post->save($data);
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post 2'));
+		$this->Post->save($data);
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post 3'));
+		$this->Post->save($data);
 		
-		$this->RevisionPost->id = 1;
-		$result = $this->RevisionPost->diff(null,null,array('fields'=>array('version_id','id', 'title', 'content')));
+		$this->Post->id = 1;
+		$result = $this->Post->diff(null,null,array('fields'=>array('version_id','id', 'title', 'content')));
 		$expected = array(
-			'RevisionPost' => array(
+			'Post' => array(
 				'version_id' => array(4,3,2),
 				'id' => 1,
 				'title' => array(
@@ -252,23 +259,23 @@ class RevisionTestCase extends CakeTestCase {
 		);
 		$this->assertEqual($expected, $result);
 	}
-	
+
 	function testPrevious() {		
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post 1'));
-		$this->RevisionPost->save($data);
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post 1'));
+		$this->Post->save($data);
 		
-		$this->RevisionPost->id = 1;
-		$this->assertNull($this->RevisionPost->previous());
+		$this->Post->id = 1;
+		$this->assertNull($this->Post->previous());
 				
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post 2'));
-		$this->RevisionPost->save($data);
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post 3'));
-		$this->RevisionPost->save($data);
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post 2'));
+		$this->Post->save($data);
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post 3'));
+		$this->Post->save($data);
 		
-		$this->RevisionPost->id = 1;		
-		$result = $this->RevisionPost->previous(array('fields'=>array('version_id','id','title')));
+		$this->Post->id = 1;		
+		$result = $this->Post->previous(array('fields'=>array('version_id','id','title')));
 		$expected = array(
-			'RevisionPost' => array(
+			'Post' => array(
 				'version_id' => 3,
 				'id' => 1,
 				'title' => 'Edited Post 2'		
@@ -278,20 +285,20 @@ class RevisionTestCase extends CakeTestCase {
 	}	
 		
 	function testUndo() {		
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post 1'));
-		$this->RevisionPost->save($data);
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post 2'));
-		$this->RevisionPost->save($data);
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post 3'));
-		$this->RevisionPost->save($data);
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post 1'));
+		$this->Post->save($data);
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post 2'));
+		$this->Post->save($data);
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post 3'));
+		$this->Post->save($data);
 		
-		$this->RevisionPost->id = 1;
-		$success = $this->RevisionPost->undo();
+		$this->Post->id = 1;
+		$success = $this->Post->undo();
 		$this->assertTrue($success);
 		
-		$result = $this->RevisionPost->find('first', array('fields'=>array('id', 'title', 'content')));
+		$result = $this->Post->find('first', array('fields'=>array('id', 'title', 'content')));
 		$expected = array(
-			'RevisionPost' => array(
+			'Post' => array(
 				'id' => 1,
 				'title' =>'Edited Post 2',
 				'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.'
@@ -299,24 +306,24 @@ class RevisionTestCase extends CakeTestCase {
 		);
 		$this->assertEqual($expected, $result);
 	}
-	
+		
 	function testRevertTo() {
 		
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post 1'));
-		$this->RevisionPost->save($data);
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post 2'));
-		$this->RevisionPost->save($data);
-		$data = array('RevisionPost' => array('id'=>1, 'title' => 'Edited Post 3'));
-		$this->RevisionPost->save($data);
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post 1'));
+		$this->Post->save($data);
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post 2'));
+		$this->Post->save($data);
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post 3'));
+		$this->Post->save($data);
 		
-		$this->RevisionPost->id = 1;
-		$success = $this->RevisionPost->RevertTo(3);
+		$this->Post->id = 1;
+		$success = $this->Post->RevertTo(3);
 		$this->assertTrue($success);
 		
-		$result = $this->RevisionPost->find('first', array('fields'=>array('id', 'title', 'content')));
+		$result = $this->Post->find('first', array('fields'=>array('id', 'title', 'content')));
 		
 		$expected = array(
-			'RevisionPost' => array(
+			'Post' => array(
 				'id' => 1,
 				'title' => 'Edited Post 2',
 				'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.'
@@ -327,28 +334,29 @@ class RevisionTestCase extends CakeTestCase {
 	
 	function testLimit() {
 		
-		$data = array('RevisionPost' => array('id'=>2, 'title' => 'Edited Post 1'));
-		$this->RevisionPost->save($data);
-		$data = array('RevisionPost' => array('id'=>2, 'title' => 'Edited Post 2'));
-		$this->RevisionPost->save($data);
-		$data = array('RevisionPost' => array('id'=>2, 'title' => 'Edited Post 3'));
-		$this->RevisionPost->save($data);
-		$data = array('RevisionPost' => array('id'=>2, 'title' => 'Edited Post 4'));
-		$this->RevisionPost->save($data);
-		$data = array('RevisionPost' => array('id'=>2, 'title' => 'Edited Post 5'));
-		$this->RevisionPost->save($data);
-		$data = array('RevisionPost' => array('id'=>2, 'title' => 'Edited Post 6'));
-		$this->RevisionPost->save($data);
-		$data = array('RevisionPost' => array('id'=>3, 'title' => 'Edited Post 6'));
-		$this->RevisionPost->save($data);
+		$data = array('Post' => array('id'=>2, 'title' => 'Edited Post 1'));
+		$this->Post->save($data);
+		$data = array('Post' => array('id'=>2, 'title' => 'Edited Post 2'));
+		$this->Post->save($data);
+		$data = array('Post' => array('id'=>2, 'title' => 'Edited Post 3'));
+		$this->Post->save($data);
+		$data = array('Post' => array('id'=>2, 'title' => 'Edited Post 4'));
+		$this->Post->save($data);
+		$data = array('Post' => array('id'=>2, 'title' => 'Edited Post 5'));
+		$this->Post->save($data);
+		$data = array('Post' => array('id'=>2, 'title' => 'Edited Post 6'));
+		$this->Post->save($data);
 		
-		$this->RevisionPost->id = 2;
 		
-		$result = $this->RevisionPost->revisions(array('fields' => array('id', 'title', 'content', 'version_id')));
+		$data = array('Post' => array('id'=>2, 'title' => 'Edited Post 6'));
+		$this->Post->save($data);
 		
+		$this->Post->id = 2;
+		
+		$result = $this->Post->revisions(array('fields' => array('id', 'title', 'content', 'version_id')));
 		$expected = array( 
 			0 => array(
-				'RevisionPost' => array(
+				'Post' => array(
 					'id' => 2, 
 					'title' => 'Edited Post 6', 
 					'content' => 'Lorem ipsum dolor sit.', 
@@ -356,7 +364,7 @@ class RevisionTestCase extends CakeTestCase {
 				)
 			),
 			1 => array (
-				'RevisionPost' => array(
+				'Post' => array(
 					'id' => 2, 
 					'title' => 'Edited Post 5', 
 					'content' => 'Lorem ipsum dolor sit.', 
@@ -364,7 +372,7 @@ class RevisionTestCase extends CakeTestCase {
 				),
 			),
 			2 => array(
-				'RevisionPost' => array(
+				'Post' => array(
 					'id' => 2, 
 					'title' => 'Edited Post 4', 
 					'content' => 'Lorem ipsum dolor sit.', 
@@ -372,7 +380,7 @@ class RevisionTestCase extends CakeTestCase {
 				)
 			),
 			3 => array (
-				'RevisionPost' => array(
+				'Post' => array(
 					'id' => 2, 
 					'title' => 'Edited Post 3', 
 					'content' => 'Lorem ipsum dolor sit.', 
@@ -380,7 +388,7 @@ class RevisionTestCase extends CakeTestCase {
 				),
 			),
 			4 => array(
-				'RevisionPost' => array(
+				'Post' => array(
 					'id' => 2, 
 					'title' => 'Edited Post 2', 
 					'content' => 'Lorem ipsum dolor sit.', 
@@ -390,20 +398,20 @@ class RevisionTestCase extends CakeTestCase {
 		);
 		$this->assertEqual($expected, $result);
 	}
-	
+
 	function testTree() {
 		
-		$this->RevisionArticle->create();
-		$data = array('RevisionArticle' => array('id'=>3, 'content' => 'Re-edited Post'));
-		$this->RevisionArticle->save($data);
+		$this->Article->create();
+		$data = array('Article' => array('id'=>3, 'content' => 'Re-edited Post'));
+		$this->Article->save($data);
 		
-		$this->RevisionArticle->moveUp(3);
+		$this->Article->moveUp(3);
 		
-		$this->RevisionArticle->id = 3;
+		$this->Article->id = 3;
 		
-		$result = $this->RevisionArticle->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
+		$result = $this->Article->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
 		$expected = array(
-			'RevisionArticle' => array(
+			'Article' => array(
 				'id' => 3, 
 				'title' => 'Lorem ipsum', 
 				'content' => 'Re-edited Post', 
@@ -415,15 +423,15 @@ class RevisionTestCase extends CakeTestCase {
 	
 	function testIgnore() {
 		
-		$data = array('RevisionArticle' => array('id'=>3, 'title' =>'New title', 'content' => 'Edited'));
-		$this->RevisionArticle->save($data);
-		$data = array('RevisionArticle' => array('id'=>3, 'title' => 'Re-edited title'));
-		$this->RevisionArticle->save($data);
+		$data = array('Article' => array('id'=>3, 'title' =>'New title', 'content' => 'Edited'));
+		$this->Article->save($data);
+		$data = array('Article' => array('id'=>3, 'title' => 'Re-edited title'));
+		$this->Article->save($data);
 				
-		$this->RevisionArticle->id = 3;		
-		$result = $this->RevisionArticle->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
+		$this->Article->id = 3;		
+		$result = $this->Article->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
 		$expected = array(
-			'RevisionArticle' => array(
+			'Article' => array(
 				'id' => 3, 
 				'title' => 'New title', 
 				'content' => 'Edited', 
@@ -434,20 +442,21 @@ class RevisionTestCase extends CakeTestCase {
 	}
 	
 	function testWithoutShadowTable() {
-		$data = array('RevisionUser' => array('id'=>1, 'name' =>'New name'));
-		$success = $this->RevisionUser->save($data);
+		$data = array('User' => array('id'=>1, 'name' =>'New name'));
+		$this->assertNoErrors();
+		$success = $this->User->save($data);
 		$this->assertTrue($success);
 	}
 	
 	function testRevertToDate() {
-		$data = array('RevisionPost' => array('id'=>3, 'title' => 'Edited Post 6'));
-		$this->RevisionPost->save($data);
+		$data = array('Post' => array('id'=>3, 'title' => 'Edited Post 6'));
+		$this->Post->save($data);
 		
-		$this->assertTrue($this->RevisionPost->revertToDate('2008-12-08'));
-		$result = $this->RevisionPost->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
+		$this->assertTrue($this->Post->revertToDate('2008-12-08'));
+		$result = $this->Post->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
 
 		$expected = array(
-			'RevisionPost' => array(
+			'Post' => array(
 					'id' => 3, 
 					'title' => 'Lorem ipsum dolor sit amet', 
 					'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.',
@@ -460,17 +469,17 @@ class RevisionTestCase extends CakeTestCase {
 	
 	function testCascade() {
 		
-		$original_comments = $this->RevisionComment->find('all');
+		$original_comments = $this->Comment->find('all');
 		
-		$data = array('RevisionVote' => array('id'=>3, 'title' => 'Edited Vote'));
-		$this->RevisionVote->save($data);
+		$data = array('Vote' => array('id'=>3, 'title' => 'Edited Vote','revision_comment_id'=>1));
+		$this->Comment->Vote->save($data);
 		
-		$this->assertTrue($this->RevisionVote->revertToDate('2008-12-08'));
-		$this->RevisionVote->id = 3;
-		$result = $this->RevisionVote->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
+		$this->assertTrue($this->Comment->Vote->revertToDate('2008-12-08'));
+		$this->Comment->Vote->id = 3;
+		$result = $this->Comment->Vote->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
 
 		$expected = array(
-			'RevisionVote' => array(
+			'Vote' => array(
 					'id' => 3, 
 					'title' => 'Stuff', 
 					'content' => 'Lorem ipsum dolor sit.',
@@ -480,33 +489,33 @@ class RevisionTestCase extends CakeTestCase {
 		
 		$this->assertEqual($expected, $result);
 		
-		$data = array('RevisionComment' => array('id'=>2, 'title' => 'Edited Comment'));
-		$this->RevisionComment->save($data);
+		$data = array('Comment' => array('id'=>2, 'title' => 'Edited Comment'));
+		$this->Comment->save($data);
 		
-		$this->assertTrue($this->RevisionComment->revertToDate('2008-12-08'));
+		$this->assertTrue($this->Comment->revertToDate('2008-12-08'));
 		
-		$reverted_comments = $this->RevisionComment->find('all');
+		$reverted_comments = $this->Comment->find('all');
 		
 		$this->assertEqual($original_comments, $reverted_comments);
 	}
 	
 	function testUndelete() {
 		
-		$this->RevisionPost->id = 3;
-		$result = $this->RevisionPost->undelete();		
+		$this->Post->id = 3;
+		$result = $this->Post->undelete();		
 		$this->assertFalse($result);
 		
-		$this->RevisionPost->delete(3);
+		$this->Post->delete(3);
 		
-		$result = $this->RevisionPost->find('first',array('conditions'=>array('id'=>3)));			
+		$result = $this->Post->find('first',array('conditions'=>array('id'=>3)));			
 		$this->assertFalse($result);
 		
-		$this->RevisionPost->id = 3;
-		$this->RevisionPost->undelete();
-		$result = $this->RevisionPost->find('first',array('conditions'=>array('id'=>3),'fields' => array('id', 'title', 'content')));
+		$this->Post->id = 3;
+		$this->Post->undelete();
+		$result = $this->Post->find('first',array('conditions'=>array('id'=>3),'fields' => array('id', 'title', 'content')));
 		
 		$expected = array(
-			'RevisionPost' => array(
+			'Post' => array(
 					'id' => 3,
 					'title' => 'Lorem ipsum dolor sit amet', 
 					'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.'
@@ -518,15 +527,15 @@ class RevisionTestCase extends CakeTestCase {
 	
 	function testCreateRevision() {
 		
-		$data = array('RevisionArticle' => array('id'=>3, 'title' =>'New title', 'content' => 'Edited'));
-		$this->RevisionArticle->save($data);
-		$data = array('RevisionArticle' => array('id'=>3, 'title' => 'Re-edited title'));
-		$this->RevisionArticle->save($data);
+		$data = array('Article' => array('id'=>3, 'title' =>'New title', 'content' => 'Edited'));
+		$this->Article->save($data);
+		$data = array('Article' => array('id'=>3, 'title' => 'Re-edited title'));
+		$this->Article->save($data);
 				
-		$this->RevisionArticle->id = 3;		
-		$result = $this->RevisionArticle->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
+		$this->Article->id = 3;		
+		$result = $this->Article->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
 		$expected = array(
-			'RevisionArticle' => array(
+			'Article' => array(
 				'id' => 3, 
 				'title' => 'New title', 
 				'content' => 'Edited', 
@@ -535,11 +544,11 @@ class RevisionTestCase extends CakeTestCase {
 		);
 		$this->assertEqual($expected, $result);
 		
-		$this->RevisionArticle->id = 3;	
-		$this->assertTrue($this->RevisionArticle->createRevision());
-		$result = $this->RevisionArticle->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
+		$this->Article->id = 3;	
+		$this->assertTrue($this->Article->createRevision());
+		$result = $this->Article->newest(array('fields' => array('id', 'title', 'content', 'version_id')));
 		$expected = array(
-			'RevisionArticle' => array(
+			'Article' => array(
 				'id' => 3, 
 				'title' => 'Re-edited title', 
 				'content' => 'Edited', 
@@ -552,27 +561,25 @@ class RevisionTestCase extends CakeTestCase {
 	
 	function testUndeleteCallbacks() {
 		
-		$this->RevisionPost->id = 3;
-		$result = $this->RevisionPost->undelete();		
+		$this->Post->id = 3;
+		$result = $this->Post->undelete();		
 		$this->assertFalse($result);
 		
-		$this->RevisionPost->delete(3);
+		$this->Post->delete(3);
 		
-		$result = $this->RevisionPost->find('first',array('conditions'=>array('id'=>3)));			
+		$result = $this->Post->find('first',array('conditions'=>array('id'=>3)));			
 		$this->assertFalse($result);
 		
-		$this->RevisionPost->id = 3;
-		$this->assertTrue($this->RevisionPost->undelete());						
+		$this->Post->id = 3;
+		$this->assertTrue($this->Post->undelete());						
 		
-		$result = $this->RevisionPost->find('first',array('conditions'=>array('id'=>3)));
+		$result = $this->Post->find('first',array('conditions'=>array('id'=>3)));
 		
 		$expected = array(
-			'RevisionPost' => array(
+			'Post' => array(
 					'id' => 3,
 					'title' => 'Lorem ipsum dolor sit amet', 
-					'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.', 
-					'modified' => '2008-12-08 11:38:53', 
-					'created' => '2010-01-01',
+					'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.',
 			)
 		);
 		
@@ -582,11 +589,11 @@ class RevisionTestCase extends CakeTestCase {
 	
 	function testInitializeRevisions() {
 		
-		$this->assertTrue($this->RevisionArticle->initializeRevisions());
-		$this->assertFalse($this->RevisionComment->initializeRevisions());
-		$this->assertFalse($this->RevisionPost->initializeRevisions());
-		$this->assertFalse($this->RevisionVote->initializeRevisions());
-		$this->assertTrue($this->RevisionTag->initializeRevisions());
+		$this->assertTrue($this->Article->initializeRevisions());
+		$this->assertFalse($this->Comment->initializeRevisions());
+		$this->assertFalse($this->Post->initializeRevisions());
+		$this->assertFalse($this->Comment->Vote->initializeRevisions());
+		$this->assertTrue($this->Tag->initializeRevisions());
 	}
 	
 }
