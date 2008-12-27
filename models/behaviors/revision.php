@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 1.1
+ * Revision Behavior 1.1.1
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -71,8 +71,8 @@
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 26. desemeber 2008
- * @version 1.1
+ * @modifed 27. desemeber 2008
+ * @version 1.1.1
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -510,11 +510,11 @@ class RevisionBehavior extends ModelBehavior {
 		$db = & ConnectionManager::getDataSource($dbConfig);
 		$prefix = $Model->tablePrefix ? $Model->tablePrefix : $db->config['prefix'];
 		$tables = $db->listSources();
-		if (!in_array($table, $tables)) {
+		$full_table_name = $prefix.$table;
+		if (!in_array($full_table_name, $tables)) {
             return false;
 		} 	
-		$Model->ShadowModel = new Model(false, $table, $dbConfig);	
-		$Model->ShadowModel->tablePrefix = $prefix;
+		$Model->ShadowModel = new Model(false, $full_table_name, $dbConfig);	
 		$Model->ShadowModel->alias = $Model->alias;
 		$Model->ShadowModel->primaryKey = 'version_id';
 		$Model->ShadowModel->order = 'version_created DESC, version_id DESC';
