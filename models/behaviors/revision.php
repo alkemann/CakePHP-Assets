@@ -511,10 +511,13 @@ class RevisionBehavior extends ModelBehavior {
 		$prefix = $Model->tablePrefix ? $Model->tablePrefix : $db->config['prefix'];
 		$tables = $db->listSources();
 		$full_table_name = $prefix.$table;
+        if ($prefix && empty($db->config['prefix'])) {
+            $table = $full_table_name;
+        }
 		if (!in_array($full_table_name, $tables)) {
             return false;
 		} 	
-		$Model->ShadowModel = new Model(false, $full_table_name, $dbConfig);	
+		$Model->ShadowModel = new Model(false, $table, $dbConfig);	
 		$Model->ShadowModel->alias = $Model->alias;
 		$Model->ShadowModel->primaryKey = 'version_id';
 		$Model->ShadowModel->order = 'version_created DESC, version_id DESC';
