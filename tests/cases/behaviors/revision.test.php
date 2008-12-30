@@ -211,6 +211,9 @@ class RevisionTestCase extends CakeTestCase {
 		$this->Post->create();
 		$data = array('Post' => array('id'=>1, 'title' => 'Re-edited Post'));
 		$this->Post->save($data);
+		$this->Post->create();
+		$data = array('Post' => array('id'=>1, 'title' => 'Newest edited Post'));
+		$this->Post->save($data);
 		
 		$this->Post->id = 1;				
 		$result = $this->Post->revisions(array('fields' => array('id', 'title', 'content', 'version_id')));
@@ -224,6 +227,36 @@ class RevisionTestCase extends CakeTestCase {
 				)
 			),
 			1 => array (
+				'Post' => array(
+					'id' => 1, 
+					'title' => 'Edited Post', 
+					'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.', 
+					'version_id' => 2
+				),
+			)
+		);
+		$this->assertEqual($expected, $result);
+		
+		$this->Post->id = 1;				
+		$result = $this->Post->revisions(array('fields' => array('id', 'title', 'content', 'version_id')),true);
+		$expected = array( 
+			0 => array(
+				'Post' => array(
+					'id' => 1, 
+					'title' => 'Newest edited Post', 
+					'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.', 
+					'version_id' => 4
+				)
+			),
+			1 => array(
+				'Post' => array(
+					'id' => 1, 
+					'title' => 'Re-edited Post', 
+					'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.', 
+					'version_id' => 3
+				)
+			),
+			2 => array (
 				'Post' => array(
 					'id' => 1, 
 					'title' => 'Edited Post', 
@@ -353,7 +386,7 @@ class RevisionTestCase extends CakeTestCase {
 		
 		$this->Post->id = 2;
 		
-		$result = $this->Post->revisions(array('fields' => array('id', 'title', 'content', 'version_id')));
+		$result = $this->Post->revisions(array('fields' => array('id', 'title', 'content', 'version_id')),true);
 		$expected = array( 
 			0 => array(
 				'Post' => array(

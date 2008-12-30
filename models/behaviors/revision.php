@@ -165,7 +165,7 @@ class RevisionBehavior extends ModelBehavior {
 			$conditions['version_id <='] = $to_version_id;		
 		}
 		$options['conditions'] = $conditions;
-		$all = $this->revisions($Model,$options);
+		$all = $this->revisions($Model,$options,true);
 		if (sizeof($all) == 0) {
 			return null;
 		}
@@ -345,7 +345,7 @@ class RevisionBehavior extends ModelBehavior {
 	 * @param array $options
 	 * @return array
 	 */
-	public function revisions(&$Model, $options = array()) {
+	public function revisions(&$Model, $options = array(), $include_current = false) {
 		if (is_null($Model->id)) {
 			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
 		}
@@ -353,8 +353,12 @@ class RevisionBehavior extends ModelBehavior {
 			$options['conditions'] = am($options['conditions'],array($Model->primaryKey => $Model->id));	
 		} else {
 			$options['conditions'] = array( $Model->primaryKey => $Model->id);	
-		}		
-		return $this->shadow($Model,'all',$options);		
+		}	
+		if ( $include_current == false ) {
+            $current = $this->newest($Model, array('fields'=>array('version_id',$Model->primaryKey)));
+            $options['conditions']['version_id !='] = $current[$Model->alias]['version_id'];
+		}	
+		return $this->shadow($Model,'all',$options);
 	}
 		
 	/**
