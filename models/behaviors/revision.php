@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 1.1.1
+ * Revision Behavior 1.1.2
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -68,11 +68,16 @@
  * option 'auto' to false. Then the shadow table will remain empty unless you call createRevisions
  * manually.
  * 
+ * 1.1.1 => 1.1.2 changelog
+ *   - revisions() got new paramter: $include_current
+ *     This now defaults to false, resulting in a change from 1.1.1. See tests
+ *
+ *
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 27. desemeber 2008
- * @version 1.1.1
+ * @modifed 30. desemeber 2008
+ * @version 1.1.2
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -343,6 +348,7 @@ class RevisionBehavior extends ModelBehavior {
 	 * @example $this->Post->id = 4; $today = $this->Post->revisions(array('conditions'=>array('version_create >'=>'2008-12-10'))); 
 	 * @param object $Model
 	 * @param array $options
+	 * @param boolean $include_current If true will include last saved (live) data
 	 * @return array
 	 */
 	public function revisions(&$Model, $options = array(), $include_current = false) {
