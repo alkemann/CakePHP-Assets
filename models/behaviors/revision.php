@@ -122,7 +122,7 @@ class RevisionBehavior extends ModelBehavior {
 		} else {
 			$this->settings[$Model->alias] = $this->defaults;
 		}		
-		$Model->ShadowModel = $this->createShadowModel($Model);	
+		$this->createShadowModel($Model);	
 	}
 
 	/**
@@ -509,7 +509,7 @@ class RevisionBehavior extends ModelBehavior {
 	 * Returns a generic model that maps to the current $Model's shadow table.
 	 *
 	 * @param object $Model
-	 * @return object
+	 * @return boolean
 	 */
 	private function createShadowModel(&$Model) {	
 		if (is_null($this->settings[$Model->alias]['useDbConfig'])) {
@@ -526,6 +526,7 @@ class RevisionBehavior extends ModelBehavior {
             $table = $full_table_name;
         }
 		if (!in_array($full_table_name, $tables)) {
+            $Model->ShadowModel = false;
             return false;
 		} 	
 		if (is_string($this->settings[$Model->alias]['model'])) {
@@ -540,7 +541,7 @@ class RevisionBehavior extends ModelBehavior {
 		$Model->ShadowModel->alias = $Model->alias;
 		$Model->ShadowModel->primaryKey = 'version_id';
 		$Model->ShadowModel->order = 'version_created DESC, version_id DESC';
-		return $Model->ShadowModel;
+		return true;
 	}
 
 }
