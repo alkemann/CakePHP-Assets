@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 1.1.3
+ * Revision Behavior 1.1.4
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -76,8 +76,8 @@
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 1. january 2009
- * @version 1.1.3
+ * @modifed 2. january 2009
+ * @version 1.1.4
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -106,7 +106,8 @@ class RevisionBehavior extends ModelBehavior {
     	'limit' => false,
     	'auto' => true,
     	'ignore' => array(),
-    	'useDbConfig' => null
+    	'useDbConfig' => null,
+    	'model' => null
     );
 
     /**
@@ -527,18 +528,20 @@ class RevisionBehavior extends ModelBehavior {
 		if (!in_array($full_table_name, $tables)) {
             return false;
 		} 	
-		
-		$Model->ShadowModel = new RevisionShadowModel(false, $table, $dbConfig);	
+		if (is_string($this->settings[$Model->alias]['model'])) {
+			if (App::import('model',$this->settings[$Model->alias]['model'])) {
+				$Model->ShadowModel = new $this->settings[$Model->alias]['model'](false, $table, $dbConfig);
+			} else {
+				$Model->ShadowModel = new Model(false, $table, $dbConfig);
+			}			
+		} else {
+			$Model->ShadowModel = new Model(false, $table, $dbConfig);
+		}			
 		$Model->ShadowModel->alias = $Model->alias;
 		$Model->ShadowModel->primaryKey = 'version_id';
 		$Model->ShadowModel->order = 'version_created DESC, version_id DESC';
 		return $Model->ShadowModel;
 	}
 
-}
-if (!class_exists('RevisionShadowModel')) {
-	class RevisionShadowModel extends Model {
-		public $name = 'RevisionShadowModel';
-	}
 }
 ?>
