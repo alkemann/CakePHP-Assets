@@ -11,10 +11,24 @@ class RevisionPostsRevFixture extends CakeTestFixture {
 		array(			
 			'version_id' => 1,
 			'version_created' => '2008-12-08 11:38:53',
-			'id' => 3, 
+			'id' => 1, 
 			'title' => 'Lorem ipsum dolor sit amet', 
-			'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.', 
+			'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.'
 		),	
+		array(
+			'version_id' => 2,
+			'version_created' => '2008-12-08 11:38:54',
+			'id' => 2, 
+			'title' => 'Post 2', 
+			'content' => 'Lorem ipsum dolor sit.'
+		),
+		array(
+			'version_id' => 3,
+			'version_created' => '2008-12-08 11:38:55',
+			'id' => 3, 
+			'title' => 'Post 3', 
+			'content' => 'Lorem ipsum dolor sit.', 
+		),
 	);
 }
 ?>

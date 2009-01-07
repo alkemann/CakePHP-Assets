@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 1.1.5
+ * Revision Behavior 1.1.4
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -76,8 +76,8 @@
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 7. january 2009
- * @version 1.1.5
+ * @modifed 2. january 2009
+ * @version 1.1.4
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -333,11 +333,60 @@ class RevisionBehavior extends ModelBehavior {
 				}
 			}			
 		} 		
-		$changes = $this->revisions($Model,array('conditions'=>array('version_created >'=>$datetime),'order'=>'version_created ASC, version_id ASC'));	
+		$changes = $this->revisions($Model,array('conditions'=>array('version_created <='=>$datetime),'order'=>'version_created ASC, version_id ASC'));
 		if (sizeof($changes) == 0) {
 			return false;
 		}
 		return $Model->save($changes[0]);
+	}
+	
+	public function revertAll(&$Model, $options = array()) {
+		if (empty($options) || !isset($options['date'])) {
+			return FALSE;
+		}
+		if (!isset($options['conditions'])) {
+			$options['conditions'] = array();
+		}
+		// leave model rows out side of condtions alone  		
+		// leave model rows not edited since date alone  
+		
+		$all = $Model->find('all',array('conditions'=>$options['conditions'],'fields'=>'id'));
+		$allIds = Set::extract($all,'/'.$Model->alias.'/'.$Model->primaryKey);		
+		
+		$cond = $options['conditions'];
+		$cond['version_created <'] = $options['date'];
+		$created_before_date = $this->shadow($Model,'all',array(
+			'order' => 'id',
+			'conditions' => $cond,
+			'fields' => array('version_id',$Model->primaryKey)
+		)); // 1,2
+		$created_before_dateIds = Set::extract($created_before_date,'/'.$Model->alias.'/'.$Model->primaryKey);
+			
+		$deleteIds = array_diff($allIds,$created_before_dateIds);
+		// delete all Model rows where there are only version_created later than date
+		$Model->deleteAll(array('Post.id'=>$deleteIds),false,true);
+		
+		unset($cond['version_created <']);
+		$cond['version_created >='] = $options['date'];
+		$created_after_date = $this->shadow($Model,'all',array(
+			'order' => 'id',
+			'conditions' => $cond,
+			'fields' => array('version_id',$Model->primaryKey)
+		)); // 1
+		$created_after_dateIds = Set::extract($created_after_date,'/'.$Model->alias.'/'.$Model->primaryKey);
+		#debug($deleteIds);	
+		#debug($created_after_dateIds);	
+		$updateIds = array_diff($created_after_dateIds,$deleteIds);
+		#debug($updateIds);
+		$revertSuccess = true;
+		foreach ($updateIds as $mid) {
+			$Model->id = $mid;
+			if ( ! $Model->revertToDate($options['date']) ) {
+				$revertSuccess = false; 
+			}
+		}
+		return $revertSuccess;
+		// update model rows that have version_created earlier than date to latest before date
 	}
 	
 	/**
@@ -511,32 +560,35 @@ class RevisionBehavior extends ModelBehavior {
 	 * @param object $Model
 	 * @return boolean
 	 */
-	private function createShadowModel(&$Model) {	
+	private function createShadowModel(&$Model) {
 		if (is_null($this->settings[$Model->alias]['useDbConfig'])) {
 			$dbConfig = $Model->useDbConfig;
 		} else {
 			$dbConfig = $this->settings[$Model->alias]['useDbConfig'];			
-		}	
-		$table = $Model->useTable .$this->revision_suffix;	
-		$db = & ConnectionManager::getDataSource($dbConfig);
+		}
+		$db = & ConnectionManager::getDataSource($dbConfig);	
+		$shadow_table = $Model->useTable .$this->revision_suffix;	
 		$prefix = $Model->tablePrefix ? $Model->tablePrefix : $db->config['prefix'];
-		$tables = $db->listSources();
-		$full_table_name = $prefix.$table;
-        if ($prefix && empty($db->config['prefix'])) {
-            $table = $full_table_name;
-        }
-		if (!in_array($full_table_name, $tables)) {
+		$full_table_name = $prefix.$shadow_table;
+	
+		$existing_tables = $db->listSources();
+		if (!in_array($full_table_name, $existing_tables)) {
             $Model->ShadowModel = false;
             return false;
-		} 	
+		}
+		/* Use the full table name if the prefix came from the model */	
+        if ($prefix && empty($db->config['prefix'])) {
+            $shadow_table = $full_table_name;
+        }
+        
 		if (is_string($this->settings[$Model->alias]['model'])) {
 			if (App::import('model',$this->settings[$Model->alias]['model'])) {
-				$Model->ShadowModel = new $this->settings[$Model->alias]['model'](false, $table, $dbConfig);
+				$Model->ShadowModel = new $this->settings[$Model->alias]['model'](false, $shadow_table, $dbConfig);
 			} else {
-				$Model->ShadowModel = new Model(false, $table, $dbConfig);
+				$Model->ShadowModel = new Model(false, $shadow_table, $dbConfig);
 			}			
 		} else {
-			$Model->ShadowModel = new Model(false, $table, $dbConfig);
+			$Model->ShadowModel = new Model(false, $shadow_table, $dbConfig);
 		}			
 		$Model->ShadowModel->alias = $Model->alias;
 		$Model->ShadowModel->primaryKey = 'version_id';

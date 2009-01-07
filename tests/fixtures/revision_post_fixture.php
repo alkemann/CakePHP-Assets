@@ -18,12 +18,12 @@ class RevisionPostFixture extends CakeTestFixture {
 		),
 		array(
 			'id' => 2, 
-			'title' => 'Stuff', 
+			'title' => 'Post 2', 
 			'content' => 'Lorem ipsum dolor sit.'
 		),
 		array(
 			'id' => 3, 
-			'title' => 'Stuff', 
+			'title' => 'Post 3', 
 			'content' => 'Lorem ipsum dolor sit.', 
 		),
 	);
