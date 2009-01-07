@@ -45,6 +45,11 @@ class RevisionTag extends CakeTestModel {
     var $name = 'RevisionTag';
     var $alias = 'Tag';
 	var $actsAs = array('Revision');
+	var $hasAndBelongsToMany = array(
+		'Comment' => array(
+			'className' => 'RevisionComment'
+		)
+	);
 }
 
 class CommentsTag extends CakeTestModel {
@@ -78,14 +83,11 @@ class RevisionTestCase extends CakeTestCase {
 	var $Vote;
 	var $Tag;
 	
-	function startTest() {
-		
+	function startTest() {		
 		$this->Post = & new RevisionPost();
-       $this->Article = & new RevisionArticle();
+		$this->Article = & new RevisionArticle();
 		$this->User = & new RevisionUser();
-		$this->Comment = & new RevisionComment();
-		$this->Tag = & new RevisionTag();	
-				
+		$this->Comment = & new RevisionComment();				
 	}
 	
 	function endTest() {
@@ -93,7 +95,6 @@ class RevisionTestCase extends CakeTestCase {
 		unset($this->Article);
 		unset($this->User);
 		unset($this->Comment);
-		unset($this->Tag);
 		ClassRegistry::flush();
 	}
 
@@ -549,7 +550,7 @@ class RevisionTestCase extends CakeTestCase {
 		
 		$this->assertEqual($expected, $result);
 	}
-	
+
 	function testCascade() {
 		$this->loadFixtures('RevisionComment','RevisionCommentsRev','RevisionVote','RevisionVotesRev');
 		
@@ -582,7 +583,7 @@ class RevisionTestCase extends CakeTestCase {
 		
 		$this->assertEqual($original_comments, $reverted_comments);
 	}
-	
+
 	function testUndelete() {
 		$this->loadFixtures('RevisionPost','RevisionPostsRev');
 		
@@ -673,20 +674,24 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertEqual($expected, $result);
 		
 	}
-	
+
 	function testInitializeRevisions() {		
 		$this->loadFixtures(
 			'RevisionPost','RevisionPostsRev',
 			'RevisionArticle','RevisionArticlesRev',
 			'RevisionComment','RevisionCommentsRev',
+			'RevisionCommentsRevisionTag',
 			'RevisionVote','RevisionVotesRev',
 			'RevisionTag','RevisionTagsRev'
 		);
+		$this->Comment->bindModel(array('hasAndBelongsToMany' => array(
+				'Tag' => array('className' => 'RevisionTag','with'=>'CommentsTag'))),false);
+		
 		$this->assertFalse($this->Post->initializeRevisions());
 		$this->assertTrue($this->Article->initializeRevisions());
 		$this->assertFalse($this->Comment->initializeRevisions());
 		$this->assertFalse($this->Comment->Vote->initializeRevisions());
-		$this->assertFalse($this->Tag->initializeRevisions());
+		$this->assertFalse($this->Comment->Tag->initializeRevisions());
 	}
 
 	function testRevertAll() {
@@ -717,7 +722,7 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertEqual($result[2]['Post']['title'],'tullball3');
 		$this->assertEqual(sizeof($result),3);
 	}	
-	
+
 	function testOnWithModel() {
 		$this->loadFixtures(
 			'RevisionComment','RevisionCommentsRev',
@@ -737,7 +742,7 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertEqual($result['Tag'][1]['title'],'Hard');
 		$this->assertEqual($result['Tag'][2]['title'],'Trick');
 	}	
-	
+
 	function testHABTMRelatedUndoed() {
 		$this->loadFixtures(
 			'RevisionComment','RevisionCommentsRev',
@@ -757,7 +762,7 @@ class RevisionTestCase extends CakeTestCase {
 		$result = $this->Comment->find('first', array('contain' => array('Tag' => array('id','title'))));
 		$this->assertEqual($result['Tag'][2]['title'],'Tricks');
 	}
-	
+
 	function testOnWithModelUndoed() {
 		$this->loadFixtures(
 			'RevisionComment','RevisionCommentsRev',
@@ -867,7 +872,7 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertEqual($result['Tag'][2]['title'],'Trick');	
 		$this->assertNoErrors('3 tags : %s');
 	}
-			
+	
 	function testHabtmRevUndoJustHabtmChanges() {
 		$this->loadFixtures(
 			'RevisionComment','RevisionCommentsRev',
@@ -899,7 +904,7 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertEqual($result['Tag'][2]['title'],'Trick');	
 		$this->assertNoErrors('3 tags : %s');
 	}
-		
+
 	function testHabtmRevRevert() {
 		$this->loadFixtures(
 			'RevisionComment','RevisionCommentsRev',
@@ -974,9 +979,8 @@ class RevisionTestCase extends CakeTestCase {
 		);
 		
 		$this->Comment->bindModel(array('hasAndBelongsToMany' => array(
-				'Tag' 
-			)
-		));
+				'Tag' => array('className' => 'RevisionTag'))),false);
+
 		$result = $this->Comment->find('first', array(
 			'conditions' => array('Comment.id' => 2),
 			'contain' => array('Tag' => array('id','title'))));
@@ -1014,6 +1018,60 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertEqual($result['Tag'][0]['title'],'Fun');
 		$this->assertEqual($result['Tag'][1]['title'],'Trick');	
 
+	}
+	
+	function testRevertToDeletedTag() {
+		$this->loadFixtures(
+			'RevisionComment','RevisionCommentsRev',
+			'RevisionCommentsRevisionTag','RevisionCommentsRevisionTagsRev',
+			'RevisionTag','RevisionTagsRev'
+		);
+		
+		$this->Comment->bindModel(array('hasAndBelongsToMany' => array(
+				'Tag' => array('className' => 'RevisionTag','with'=>'CommentsTag'))),false);
+		
+		$this->Comment->Tag->delete(1);
+		
+		$result = $this->Comment->shadow('all', array('conditions'=>array('version_id'=>array(4,5))));
+		$this->assertEqual($result[0]['Comment']['Tag'],'3');
+		$this->assertEqual($result[1]['Comment']['Tag'],'2,3');
+	}
+
+	function testBadKittyForgotId() {
+		
+		$this->assertNull($this->Comment->createRevision(),'createRevision() : %s');
+		$this->assertError(true);
+		$this->assertNull($this->Comment->diff(),'diff() : %s');
+		$this->assertError(true);
+		$this->assertNull($this->Comment->undelete(),'undelete() : %s');
+		$this->assertError(true);
+		$this->assertNull($this->Comment->undo(),'undo() : %s');
+		$this->assertError(true);
+		$this->assertNull($this->Comment->newest(),'newest() : %s');
+		$this->assertError(true);
+		$this->assertNull($this->Comment->oldest(),'oldest() : %s');
+		$this->assertError(true);
+		$this->assertNull($this->Comment->previous(),'previous() : %s');
+		$this->assertError(true);		
+		$this->assertNull($this->Comment->revertTo(10),'revertTo() : %s');	
+		$this->assertError(true);	
+		$this->assertNull($this->Comment->revertToDate(date('Y-m-d H:i:s',strtotime('yesterday')),'revertTo() : %s'));
+		$this->assertError(true);		
+		$this->assertNull($this->Comment->revisions(),'revisions() : %s');			
+		$this->assertError(true);
+	}
+	
+	function testBadKittyMakesUpStuff() {
+		$this->loadFixtures(
+			'RevisionComment','RevisionCommentsRev',
+			'RevisionCommentsRevisionTag','RevisionCommentsRevisionTagsRev',
+			'RevisionTag','RevisionTagsRev'
+		);
+		
+		$this->Comment->id = 1;
+		$this->assertFalse($this->Comment->revertTo(10),'revertTo() : %s');
+		$this->assertFalse($this->Comment->diff(1,4),'diff() between existing and non-existing : %s');
+		$this->assertFalse($this->Comment->diff(10,4),'diff() between two non existing : %s');
 	}
 
 }
