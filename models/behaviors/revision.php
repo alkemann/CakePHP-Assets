@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 1.1.4
+ * Revision Behavior 1.2
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -72,12 +72,14 @@
  *   - revisions() got new paramter: $include_current
  *     This now defaults to false, resulting in a change from 1.1.1. See tests
  *
+ * 1.1.6 => 1.2 
+ *   - includes HABTM revision control (one way)
  *
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 2. january 2009
- * @version 1.1.4
+ * @modifed 7. january 2009
+ * @version 1.2
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -299,10 +301,18 @@ class RevisionBehavior extends ModelBehavior {
 		if (is_null($Model->id)) {
 			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
 		}
-		$data = $this->shadow($Model,'first',array('conditions'=>array('version_id'=>$version_id)));
-		if (sizeof($data) != 1) {
+		$data = $this->shadow($Model,'first',array('conditions'=>array('version_id'=>$version_id)));	
+		if ($data == false) {
 			return false;
 		}
+		$habtm = array();
+		if (!empty($Model->hasAndBelongsToMany)) {
+			foreach ($Model->hasAndBelongsToMany as $assocAlias => $a) {
+				if (isset($Model->ShadowModel->_schema[$assocAlias])) {					
+					$data[$assocAlias][$assocAlias] = explode(',',$data[$Model->alias][$assocAlias]);
+				} 
+			}
+		}	
 		return $Model->save($data);
 	}
 	
@@ -333,13 +343,36 @@ class RevisionBehavior extends ModelBehavior {
 				}
 			}			
 		} 		
-		$changes = $this->revisions($Model,array('conditions'=>array('version_created <='=>$datetime),'order'=>'version_created ASC, version_id ASC'));
-		if (sizeof($changes) == 0) {
+		$data = $this->shadow($Model,'first',array(
+			'conditions'=>array(
+				$Model->primaryKey => $Model->id,
+				'version_created <='=>$datetime
+			),
+			'order'=>'version_created ASC, version_id ASC'
+		));	
+		if ($data == false) {
 			return false;
 		}
-		return $Model->save($changes[0]);
+		$habtm = array();
+		if (!empty($Model->hasAndBelongsToMany)) {
+				foreach ($Model->hasAndBelongsToMany as $assocAlias => $a) {
+					if (isset($Model->ShadowModel->_schema[$assocAlias])) {					
+						$data[$assocAlias][$assocAlias] = explode(',',$data[$Model->alias][$assocAlias]);
+					} 
+				}
+		}
+		return $Model->save($data);
 	}
 	
+	/**
+	 * Revert all rows matching conditions to given date.
+	 * Model rows outside condition or not edited will not be affected. Edits since date
+	 * will be reverted and rows created since date deleted.
+	 *
+	 * @param object $Model
+	 * @param array $options 'conditions','date'
+	 * @return boolean success
+	 */
 	public function revertAll(&$Model, $options = array()) {
 		if (empty($options) || !isset($options['date'])) {
 			return FALSE;
@@ -350,35 +383,35 @@ class RevisionBehavior extends ModelBehavior {
 		// leave model rows out side of condtions alone  		
 		// leave model rows not edited since date alone  
 		
-		$all = $Model->find('all',array('conditions'=>$options['conditions'],'fields'=>'id'));
+		$all = $Model->find('all',array('conditions'=>$options['conditions'],'fields'=>$Model->primaryKey));
 		$allIds = Set::extract($all,'/'.$Model->alias.'/'.$Model->primaryKey);		
 		
 		$cond = $options['conditions'];
 		$cond['version_created <'] = $options['date'];
 		$created_before_date = $this->shadow($Model,'all',array(
-			'order' => 'id',
+			'order' => $Model->primaryKey,
 			'conditions' => $cond,
 			'fields' => array('version_id',$Model->primaryKey)
-		)); // 1,2
+		)); 
 		$created_before_dateIds = Set::extract($created_before_date,'/'.$Model->alias.'/'.$Model->primaryKey);
 			
 		$deleteIds = array_diff($allIds,$created_before_dateIds);
+		
 		// delete all Model rows where there are only version_created later than date
 		$Model->deleteAll(array('Post.id'=>$deleteIds),false,true);
 		
 		unset($cond['version_created <']);
 		$cond['version_created >='] = $options['date'];
 		$created_after_date = $this->shadow($Model,'all',array(
-			'order' => 'id',
+			'order' => $Model->primaryKey,
 			'conditions' => $cond,
 			'fields' => array('version_id',$Model->primaryKey)
-		)); // 1
+		)); 
 		$created_after_dateIds = Set::extract($created_after_date,'/'.$Model->alias.'/'.$Model->primaryKey);
-		#debug($deleteIds);	
-		#debug($created_after_dateIds);	
 		$updateIds = array_diff($created_after_dateIds,$deleteIds);
-		#debug($updateIds);
+		
 		$revertSuccess = true;
+		// update model rows that have version_created earlier than date to latest before date
 		foreach ($updateIds as $mid) {
 			$Model->id = $mid;
 			if ( ! $Model->revertToDate($options['date']) ) {
@@ -386,9 +419,8 @@ class RevisionBehavior extends ModelBehavior {
 			}
 		}
 		return $revertSuccess;
-		// update model rows that have version_created earlier than date to latest before date
 	}
-	
+
 	/**
 	 * Returns a comeplete list of revisions for the current Model->id. 
 	 * The options array may include Model::find parameters to narrow down result
@@ -484,6 +516,18 @@ class RevisionBehavior extends ModelBehavior {
 			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
 		}
 		$data = $this->previous($Model);
+		if ($data == false) {
+			return false;
+		}
+		
+		$habtm = array();
+		if (!empty($Model->hasAndBelongsToMany)) {
+			foreach ($Model->hasAndBelongsToMany as $assocAlias => $a) {
+				if (isset($Model->ShadowModel->_schema[$assocAlias])) {					
+					$data[$assocAlias][$assocAlias] = explode(',',$data[$Model->alias][$assocAlias]);
+				} 
+			}
+		}			
 		return $Model->save($data);
 	}	
 	
@@ -495,28 +539,60 @@ class RevisionBehavior extends ModelBehavior {
 	 * @param boolean $created
 	 * @return boolean
 	 */
-	public function afterSave(&$Model) {
+	public function afterSave(&$Model, $created) {
 		if ($this->settings[$Model->alias]['auto'] === false) {
 			return true;
 		}		
 		if (!$Model->ShadowModel) {
             return true;
 		}   
-		$data = $Model->findById($Model->id);
+		if ($created) {
+			$Model->set('id',$Model->id);
+			$Model->set('version_created',date('Y-m-d H:i:s'));
+			/** trenger å ta med seg tags første gangen @todo */
+			return $Model->ShadowModel->save($Model->data,false);			
+		}  	
+			
+		$habtm = array();
+		if (!empty($Model->hasAndBelongsToMany)) {
+	#		$Model->Behaviors->attach('Containable');
+			foreach ($Model->hasAndBelongsToMany as $assocAlias => $a) {
+				if (isset($Model->ShadowModel->_schema[$assocAlias])) {					
+					$habtm[] = $assocAlias;	
+				} 
+			}
+		}	 		
+		$data = $Model->find('first', array(
+	       		'contain'=> $habtm,
+	       		'conditions'=>array($Model->alias.'.'.$Model->primaryKey => $Model->id)));
+
 		$changeDetected = false;
 		foreach ($data[$Model->alias] as $key => $value) {
    			if (isset($data[$Model->alias][$Model->primaryKey]) && !empty($this->old) && isset($this->old[$Model->alias][$key])) {
-   				$old = $this->old[$Model->alias][$key];
+   				$old_value = $this->old[$Model->alias][$key];
    			} else {
-   				$old = '';
+   				$old_value = '';
    			}
-   			if ($value != $old && !in_array($key,$this->settings[$Model->alias]['ignore'])) {
+   			if ($value != $old_value && !in_array($key,$this->settings[$Model->alias]['ignore'])) {
    				$changeDetected = true;				
    			}
    		}
+   		if (!empty($habtm)) {
+	   		foreach ($habtm as $assocAlias) {
+				$currentIds = Set::extract($data,$assocAlias.'.{n}.id');
+				$oldIds = Set::extract($this->old,$assocAlias.'.{n}.id');
+				$id_changes = array_diff($currentIds,$oldIds);
+				if (!empty($id_changes)) {
+					$data[$Model->ShadowModel->alias][$assocAlias] = implode(',',$currentIds);
+					$changeDetected = true;
+				}
+	   		}   			
+   		} 		
+   		
    		if (!$changeDetected) {
    			return true;
    		}
+   		
 		$data[$Model->ShadowModel->alias]['version_created'] = date('Y-m-d H:i:s');
 		$Model->ShadowModel->save($data,false);
 		$Model->version_id = $Model->ShadowModel->id;
@@ -546,11 +622,26 @@ class RevisionBehavior extends ModelBehavior {
 		if (!$Model->ShadowModel) {
             return true;
 		}   
-		$Model->ShadowModel->id = null;
 		$Model->ShadowModel->create();
-       	$this->old = $Model->find('first', array(
-       		'recursive' => -1,
-       		'conditions'=>array($Model->alias.'.'.$Model->primaryKey => $Model->id)));
+		if (!isset($Model->data[$Model->alias][$Model->primaryKey]) && !$Model->id) {
+			return true;
+		}
+		
+		$habtm = array();
+		if (!empty($Model->hasAndBelongsToMany)) {
+	#		$Model->Behaviors->attach('Containable');
+			foreach ($Model->hasAndBelongsToMany as $assocAlias => $a) {
+				if (isset($Model->ShadowModel->_schema[$assocAlias])) {					
+					$habtm[] = $assocAlias;	
+				} 
+			}
+		}	
+		
+		$this->old = $Model->find('first', array(
+	       		'contain'=> $habtm,
+	     //		'recursive' => -1,
+	       		'conditions'=>array($Model->alias.'.'.$Model->primaryKey => $Model->id)));
+		
         return true;
 	}
 

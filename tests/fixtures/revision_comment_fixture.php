@@ -14,17 +14,17 @@ class RevisionCommentFixture extends CakeTestFixture {
 	var $records = array(
 		array(
 			'id' => 1, 
-			'title' => 'Lorem ipsum dolor sit amet', 
+			'title' => 'Comment 1', 
 			'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat.', 
 		),
 		array(
 			'id' => 2, 
-			'title' => 'Stuff', 
+			'title' => 'Comment 2', 
 			'content' => 'Lorem ipsum dolor sit.', 
 		),
 		array(
 			'id' => 3, 
-			'title' => 'Stuff', 
+			'title' => 'Comment 3', 
 			'content' => 'Lorem ipsum dolor sit.', 
 		),
 	);
