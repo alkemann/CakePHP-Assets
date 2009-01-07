@@ -17,6 +17,7 @@
  *  - Revert to a datetime (and even do so cascading)
  *  - Get a diff model array to compare two or more revisions
  *  - Inspect any or all revisions of a model
+ *  - NEW As of 1.2 behavior will revision HABTM relationships (from one way)
  *
  * Install instructions :
  * 
@@ -67,6 +68,13 @@
  * that is now the live data. If you do NOT want this automatic behavior, you may set the config
  * option 'auto' to false. Then the shadow table will remain empty unless you call createRevisions
  * manually.
+ * 
+ * HABTM revision feature :
+ * In order to do revision on HABTM relationship, add a text field to the main model's shadow table
+ * with the same name as the association, ie if Article habtm ArticleTag as Tag, add a field 'Tag' 
+ * to articles_revs.
+ * NB! In version 1.2 and up to current, Using HABTM revision requires Containable behavior on the 
+ * main model
  * 
  * 1.1.1 => 1.1.2 changelog
  *   - revisions() got new paramter: $include_current
