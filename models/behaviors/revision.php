@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 1.1.4
+ * Revision Behavior 1.1.5
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -76,8 +76,8 @@
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 2. january 2009
- * @version 1.1.4
+ * @modifed 7. january 2009
+ * @version 1.1.5
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -138,7 +138,7 @@ class RevisionBehavior extends ModelBehavior {
 		}
 		$Model->read();
 		$data = $Model->data;		
-		$data[$Model->ShadowModel->alias]['version_created'] = date('Y-m-d h:i:s');
+		$data[$Model->ShadowModel->alias]['version_created'] = date('Y-m-d H:i:s');
 		return $Model->ShadowModel->save($data,false);
 	}
 	
@@ -206,7 +206,7 @@ class RevisionBehavior extends ModelBehavior {
 			return false;
 		}
 		$all = $Model->find('all');
-		$version_created = date('Y-m-d h:i:s');
+		$version_created = date('Y-m-d H:i:s');
 		foreach ($all as $data) {
 			$data[$Model->ShadowModel->alias]['version_created'] = $version_created;
 			$Model->ShadowModel->create($data);
@@ -468,7 +468,7 @@ class RevisionBehavior extends ModelBehavior {
    		if (!$changeDetected) {
    			return true;
    		}
-		$data[$Model->ShadowModel->alias]['version_created'] = date('Y-m-d h:i:s');
+		$data[$Model->ShadowModel->alias]['version_created'] = date('Y-m-d H:i:s');
 		$Model->ShadowModel->save($data,false);
 		$Model->version_id = $Model->ShadowModel->id;
 		if (is_numeric($this->settings[$Model->alias]['limit'])) {
