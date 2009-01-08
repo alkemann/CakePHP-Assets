@@ -728,6 +728,9 @@ class RevisionBehavior extends ModelBehavior {
    		$Model->ShadowModel->create($data);
    		if (!empty($habtm)) {
 	   		foreach ($habtm as $assocAlias) {
+	   			if (in_array($assocAlias,$this->settings[$Model->alias]['ignore'])) {
+	   				continue;
+	   			}
 				$currentIds = Set::extract($data,$assocAlias.'.{n}.id');
 				$oldIds = Set::extract($this->old,$assocAlias.'.{n}.id');
 				$id_changes = array_diff($currentIds,$oldIds);
