@@ -959,6 +959,42 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertEqual($expected,$result['Comment']['Tag']);
 	}
 	
+	function testHabtmRevCreate() {
+		$this->loadFixtures(
+			'RevisionComment','RevisionCommentsRev',
+			'RevisionCommentsRevisionTag','RevisionCommentsRevisionTagsRev',
+			'RevisionTag','RevisionTagsRev'
+		);
+		$this->Comment->bindModel(array('hasAndBelongsToMany' => array(
+				'Tag' => array(
+					'className' => 'RevisionTag'
+				)
+			)
+		),false);
+		
+		$result = $this->Comment->find('first', array('contain' => array('Tag' => array('id','title'))));
+		$this->assertEqual(sizeof($result['Tag']),3);
+		$this->assertEqual($result['Tag'][0]['title'],'Fun');
+		$this->assertEqual($result['Tag'][1]['title'],'Hard');
+		$this->assertEqual($result['Tag'][2]['title'],'Trick');
+
+		$currentIds = Set::extract($result,'Tag.{n}.id');
+		$expected = implode(',',$currentIds);
+		
+		$this->Comment->create(
+			array(
+				'Comment' => array('title' => 'Comment 4'),
+				'Tag' => array(
+					'Tag' => array(2,4)
+				)
+			)
+		);
+		
+		$this->Comment->save();		
+		
+		$result = $this->Comment->newest();
+		$this->assertEqual('2,4',$result['Comment']['Tag']);
+	}
 	function testHabtmRevUndo() {
 		$this->loadFixtures(
 			'RevisionComment','RevisionCommentsRev',

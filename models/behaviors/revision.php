@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 1.2.3
+ * Revision Behavior 1.2.4
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -75,9 +75,8 @@
  * In order to do revision on HABTM relationship, add a text field to the main model's shadow table
  * with the same name as the association, ie if Article habtm ArticleTag as Tag, add a field 'Tag' 
  * to articles_revs.
- * NB! In version 1.2 and up to current, Using HABTM revision requires Containable behavior on the 
- * main model and that both models uses this behavior (even if secondary model does not have a shadow
- * table).
+ * NB! In version 1.2 and up to current, Using HABTM revision requires that both models uses this
+ * behavior (even if secondary model does not have a shadow table).
  * 
  * 1.1.1 => 1.1.2 changelog
  *   - revisions() got new paramter: $include_current
@@ -93,7 +92,7 @@
  * @author Alexander 'alkemann' Morland
  * @license MIT
  * @modifed 8. january 2009
- * @version 1.2.3
+ * @version 1.2.4
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -139,6 +138,7 @@ class RevisionBehavior extends ModelBehavior {
 			$this->settings[$Model->alias] = $this->defaults;
 		}		
 		$this->createShadowModel($Model);	
+		$Model->Behaviors->attach('Containable');
 	}
 
 	/**
@@ -692,7 +692,13 @@ class RevisionBehavior extends ModelBehavior {
 			$Model->ShadowModel->create($Model->data,true);
 			$Model->ShadowModel->set('id',$Model->id);
 			$Model->ShadowModel->set('version_created',date('Y-m-d H:i:s'));
-			/** trenger å ta med seg tags første gangen @todo */
+			foreach ($Model->data as $alias => $alias_data) {
+				if (isset($Model->ShadowModel->_schema[$alias])) {
+					if (isset($alias_data[$alias]) && !empty($alias_data[$alias])) {
+						$Model->ShadowModel->set($alias,implode(',',$alias_data[$alias]));
+					}
+				}
+			}
 			return $Model->ShadowModel->save();			
 		}  	
 			
