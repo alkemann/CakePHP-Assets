@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 1.2.2
+ * Revision Behavior 1.2.3
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -90,8 +90,8 @@
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 7. january 2009
- * @version 1.2.2
+ * @modifed 8. january 2009
+ * @version 1.2.3
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -438,7 +438,7 @@ class RevisionBehavior extends ModelBehavior {
 		$deleteIds = array_diff($allIds,$created_before_dateIds);
 		
 		// delete all Model rows where there are only version_created later than date
-		$Model->deleteAll(array('Post.id'=>$deleteIds),false,true);
+		$Model->deleteAll(array($Model->alias.'.'.$Model->primaryKey => $deleteIds),false,true);
 		
 		unset($cond['version_created <']);
 		$cond['version_created >='] = $options['date'];
