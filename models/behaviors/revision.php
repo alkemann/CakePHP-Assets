@@ -458,23 +458,43 @@ class RevisionBehavior extends ModelBehavior {
 	 */
 	public function revertToDate(&$Model, $datetime, $cascade = false, $force_delete = false) {
 		if (! $Model->id) {
-			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); return null;
+			trigger_error('RevisionBehavior: Model::id must be set', E_USER_WARNING); 
+			return null;
 		}
-		if (!$Model->ShadowModel) {
-			trigger_error('RevisionBehavior: ShadowModel doesnt exist.', E_USER_WARNING); 
-            return false;
-		}   
 		if ($cascade) {		
 			$associated = array_merge($Model->hasMany, $Model->hasOne);
 			foreach ($associated as $assoc => $data) {
-				$children = $Model->$assoc->find('list', array('conditions'=>array($data['foreignKey']=>$Model->id),'recursive'=>-1));
-				$ids = array_keys($children);
-				foreach ($ids as $id) {
-					$Model->$assoc->id = $id;
-					$Model->$assoc->revertToDate($datetime,true,$force_delete);
-				}
+				$children = $Model->$assoc->find('list', array('conditions'=>array($data['foreignKey']=>$Model->id),'recursive'=>-1));		
+				$ids = array();		
+				if (!empty($children)) {
+					$ids = array_keys($children);
+					foreach ($ids as $id) {
+						$ids = array_keys($children);
+						$Model->$assoc->id = $id;
+						$Model->$assoc->revertToDate($datetime,true,$force_delete);
+					}
+				}		
+				
+				$revision_children = $Model->$assoc->shadow('all', array(
+					'fields'=>array('DISTINCT '.$Model->primaryKey),
+					'conditions'=>array(
+						$data['foreignKey']=>$Model->id,
+						'NOT' => array( $Model->primaryKey => $ids )
+					),
+				));
+				if (!empty($revision_children)) {
+					$rev_ids = Set::extract($revision_children,'/'.$assoc.'/'.$Model->$assoc->primaryKey);
+					foreach ($rev_ids as $id) {
+						$Model->$assoc->id = $id;
+						$Model->$assoc->revertToDate($datetime,true,$force_delete);
+					}
+				}				
 			}			
 		} 		
+		if (!isset($Model->ShadowModel) || !$Model->ShadowModel) {
+			//trigger_error('RevisionBehavior: ShadowModel doesnt exist.', E_USER_WARNING); 
+            return true;
+		}   
 		$data = $this->shadow($Model,'first',array(
 			'conditions'=>array(
 				$Model->primaryKey => $Model->id,
@@ -486,7 +506,7 @@ class RevisionBehavior extends ModelBehavior {
 			if ($force_delete) {
 				return $Model->delete($Model->id);
 			}
-			return false;
+			return true;
 		}
 		$habtm = array();
 		if (!empty($Model->hasAndBelongsToMany)) {
@@ -730,9 +750,12 @@ class RevisionBehavior extends ModelBehavior {
 	   		foreach ($habtm as $assocAlias) {
 	   			if (in_array($assocAlias,$this->settings[$Model->alias]['ignore'])) {
 	   				continue;
-	   			}
+	   			}				$oldIds = Set::extract($this->old,$assocAlias.'.{n}.id');
+				if (!isset($Model->data[$assocAlias])) {					
+					$Model->ShadowModel->set($assocAlias, implode(',',$oldIds));
+					continue;
+				}
 				$currentIds = Set::extract($data,$assocAlias.'.{n}.id');
-				$oldIds = Set::extract($this->old,$assocAlias.'.{n}.id');
 				$id_changes = array_diff($currentIds,$oldIds);
 				if (!empty($id_changes)) {
 					$Model->ShadowModel->set($assocAlias, implode(',',$currentIds));
