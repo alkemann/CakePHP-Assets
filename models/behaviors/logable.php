@@ -26,9 +26,8 @@
  * - "change"   	[string] : depending on setting either : 
  * 							[name (alek) => (Alek), age (28) => (29)] or [name, age]
  * 
- * - "version_id"	[int]	 : cooperates with RevisionBehavior to link the the shadow table (thus linking to old data)
- * 
- * Remember that Logable behavior needs to be added after RevisionBehavior. In fact, just put it last to be safe.
+ * - "version_id"	[int]	 : cooperates with VersionBehavior to link the the shadow table (thus linking to old data)
+ * @todo implement version cooperation
  * 
  * Optionally register what user was responisble for the activity :
  * 
@@ -99,13 +98,13 @@ class LogableBehavior extends ModelBehavior
 	        }
 		} else {
 			$this->UserModel = $Model;
-		}
-       
+		}       
 	}
 	
 	function settings(&$Model) {
 		return $this->settings[$Model->alias];
 	}
+	
 	/**
 	 * Useful for getting logs for a model, takes params to narrow find. 
 	 * This method can actually also be used to find logs for all models or
@@ -428,20 +427,16 @@ class LogableBehavior extends ModelBehavior
     		$logData['Log']['model'] = $Model->alias;
     	}
     	
-    	if (isset($this->Log->_schema['model_id'])) {
+    	if (isset($this->Log->_schema['model_id']) && !isset($logData['Log']['model_id'])) {
     		if ($Model->id) {
     			$logData['Log']['model_id'] = $Model->id;
     		} elseif ($Model->insertId) {
     			$logData['Log']['model_id'] = $Model->insertId;
     		}     		
     	}
-    
+    	
     	if (!isset($this->Log->_schema[ 'action' ])) {
     		unset($logData['Log']['action']);
-    	}
-    	
-    	if (isset($this->Log->_schema[ 'version_id' ]) && isset($Model->version_id)) {
-    		$logData['Log']['version_id'] = $Model->version_id;
     	}
     	
     	if (isset($this->Log->_schema[ 'ip' ]) && $this->userIP) {
