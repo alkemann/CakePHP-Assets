@@ -1,8 +1,8 @@
 <?php
 class RevisionPost extends CakeTestModel {
-    var $name = 'RevisionPost';
-    var $alias = 'Post';
-	var $actsAs = array('Revision' => array('limit'=>5));
+    public $name = 'RevisionPost';
+    public $alias = 'Post';
+	public $actsAs = array('Revision' => array('limit'=>5));
 	
 	function beforeUndelete() {
 		$this->beforeUndelete = true;
@@ -16,9 +16,9 @@ class RevisionPost extends CakeTestModel {
 }
 
 class RevisionArticle extends CakeTestModel {
-    var $name = 'RevisionArticle';
-    var $alias = 'Article';
-	var $actsAs = array(
+    public $name = 'RevisionArticle';
+    public $alias = 'Article';
+	public $actsAs = array(
 		'Tree',
 		'Revision' => array('ignore'=>array('title')));
 	
@@ -27,14 +27,14 @@ class RevisionArticle extends CakeTestModel {
 	 * of a deleted node.
 	 */
 	function afterUndelete() {
-		$former_children = $this->shadow('list', array(
+		$former_children = $this->ShadowModel->find('list', array(
 			'conditions' => array(
 				'parent_id' => $this->id
 			),
 			'distinct' => true,
 			'order' => 'version_created DESC, version_id DESC' 
 		));
-		foreach ($former_children as $cid => $child) {
+		foreach (array_keys($former_children) as $cid) {
 			$this->id = $cid;
 			$this->undelete();
 		}
@@ -42,32 +42,32 @@ class RevisionArticle extends CakeTestModel {
 }
 
 class RevisionUser extends CakeTestModel {
-    var $name = 'RevisionUser';
-    var $alias = 'User';
-	var $actsAs = array('Revision');
+    public $name = 'RevisionUser';
+    public $alias = 'User';
+	public $actsAs = array('Revision');
 }
 
 class RevisionComment extends CakeTestModel {
-    var $name = 'RevisionComment';
-    var $alias = 'Comment';
-	var $actsAs = array('Containable','Revision');
+    public $name = 'RevisionComment';
+    public $alias = 'Comment';
+	public $actsAs = array('Containable','Revision');
 	
-	var $hasMany = array('Vote'=>array('className' => 'RevisionVote',
+	public $hasMany = array('Vote'=>array('className' => 'RevisionVote',
 								'foreignKey' => 'revision_comment_id',
 								'dependent' => true));
 }
 
 class RevisionVote extends CakeTestModel {
-    var $name = 'RevisionVote';
-    var $alias = 'Vote';
-	var $actsAs = array('Revision');
+    public $name = 'RevisionVote';
+    public $alias = 'Vote';
+	public $actsAs = array('Revision');
 }
 
 class RevisionTag extends CakeTestModel {
-    var $name = 'RevisionTag';
-    var $alias = 'Tag';
-	var $actsAs = array('Revision');
-	var $hasAndBelongsToMany = array(
+    public $name = 'RevisionTag';
+    public $alias = 'Tag';
+	public $actsAs = array('Revision');
+	public $hasAndBelongsToMany = array(
 		'Comment' => array(
 			'className' => 'RevisionComment'
 		)
@@ -75,41 +75,42 @@ class RevisionTag extends CakeTestModel {
 }
 
 class CommentsTag extends CakeTestModel {
-    var $name = 'CommentsTag';
-    var $useTable = 'revision_comments_revision_tags';
-	var $actsAs = array('Revision');
+    public $name = 'CommentsTag';
+    public $useTable = 'revision_comments_revision_tags';
+	public $actsAs = array('Revision');
 }
 
 class RevisionTestCase extends CakeTestCase {
 	
-	var $autoFixtures = false;
-	var $fixtures = array(
-			'app.revision_article', 
-			'app.revision_articles_rev', 
-			'app.revision_post', 
-			'app.revision_posts_rev', 
-			'app.revision_user',
-			'app.revision_comment',
-			'app.revision_comments_rev',
-			'app.revision_vote',
-			'app.revision_votes_rev',
-			'app.revision_comments_revision_tag',
-			'app.revision_comments_revision_tags_rev',
-			'app.revision_tag',
-			'app.revision_tags_rev');
+	public $autoFixtures = false;
+	public $fixtures = array(
+		'app.revision_article', 
+		'app.revision_articles_rev', 
+		'app.revision_post', 
+		'app.revision_posts_rev', 
+		'app.revision_user',
+		'app.revision_comment',
+		'app.revision_comments_rev',
+		'app.revision_vote',
+		'app.revision_votes_rev',
+		'app.revision_comments_revision_tag',
+		'app.revision_comments_revision_tags_rev',
+		'app.revision_tag',
+		'app.revision_tags_rev'
+	);
 	
-	var $Post;
-	var $Article;
-	var $User;
-	var $Comment;
-	var $Vote;
-	var $Tag;
+	public $Post;
+	public $Article;
+	public $User;
+	public $Comment;
+	public $Vote;
+	public $Tag;
 	
 	function startTest() {		
-		$this->Post = & new RevisionPost();
-		$this->Article = & new RevisionArticle();
-		$this->User = & new RevisionUser();
-		$this->Comment = & new RevisionComment();				
+		$this->Post = new RevisionPost();
+		$this->Article = new RevisionArticle();
+		$this->User = new RevisionUser();
+		$this->Comment = new RevisionComment();				
 	}
 	
 	function endTest() {
@@ -145,7 +146,7 @@ class RevisionTestCase extends CakeTestCase {
         $this->Post->createRevision();
 	
 		$this->Post->id = 1;
-		$count = $this->Post->shadow('count', array('conditions'=>array('id'=>1)));
+		$count = $this->Post->ShadowModel->find('count', array('conditions'=>array('id'=>1)));
 		$this->assertEqual($count,2);
 		
 		$this->Post->id = 1;
@@ -153,7 +154,7 @@ class RevisionTestCase extends CakeTestCase {
 		$this->Post->save($data);
 		
 		$this->Post->id = 1;
-		$count = $this->Post->shadow('count', array('conditions'=>array('id'=>1)));
+		$count = $this->Post->ShadowModel->find('count', array('conditions'=>array('id'=>1)));
 		$this->assertEqual($count,2);
 	}
 	
@@ -194,7 +195,7 @@ class RevisionTestCase extends CakeTestCase {
 		
 		$this->Post->save(array('Post' => array('id'=>5, 'title' => 'Edit Post 3')));
 		
-		$result = $this->Post->shadow('first',array('fields' => array('version_id','id','title','content')));
+		$result = $this->Post->ShadowModel->find('first',array('fields' => array('version_id','id','title','content')));
 		$expected = array( 
 			'Post' => array(
 	            'version_id' => 7,
@@ -210,7 +211,7 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertEqual($result['Post']['title'],'Non Used Post');
 		$this->assertEqual($result['Post']['version_id'],4);
 		
-		$result = $this->Post->shadow('first',array(
+		$result = $this->Post->ShadowModel->find('first',array(
 			'conditions' => array('version_id'=>4),
 			'fields' => array('version_id','id','title','content')));
 		
@@ -572,7 +573,6 @@ class RevisionTestCase extends CakeTestCase {
 					'version_id' => 5
 			)
 		);
-		
 		$this->assertEqual($expected, $result);
 	}
 
@@ -977,9 +977,6 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertEqual($result['Tag'][0]['title'],'Fun');
 		$this->assertEqual($result['Tag'][1]['title'],'Hard');
 		$this->assertEqual($result['Tag'][2]['title'],'Trick');
-
-		$currentIds = Set::extract($result,'Tag.{n}.id');
-		$expected = implode(',',$currentIds);
 		
 		$this->Comment->create(
 			array(
@@ -995,6 +992,41 @@ class RevisionTestCase extends CakeTestCase {
 		$result = $this->Comment->newest();
 		$this->assertEqual('2,4',$result['Comment']['Tag']);
 	}
+	
+	function testHabtmRevIgnore() {
+		$this->loadFixtures(
+			'RevisionComment','RevisionCommentsRev',
+			'RevisionCommentsRevisionTag','RevisionCommentsRevisionTagsRev',
+			'RevisionTag','RevisionTagsRev'
+		);
+		
+		$this->Comment->Behaviors->detach('Revision');
+		$this->Comment->Behaviors->attach('Revision', array('ignore'=>array('Tag')));
+		
+		$this->Comment->bindModel(array('hasAndBelongsToMany' => array(
+				'Tag' => array(
+					'className' => 'RevisionTag'
+				)
+			)
+		),false);
+		
+		$this->Comment->id = 1;
+		$original_result = $this->Comment->newest();
+
+		$this->Comment->save(
+			array(
+				'Comment' => array('id' => 1),
+				'Tag' => array(
+					'Tag' => array(2,4)
+				)
+			)
+		);
+		
+		$result = $this->Comment->newest();
+		$this->assertEqual($original_result, $result);
+	}
+	
+	
 	function testHabtmRevUndo() {
 		$this->loadFixtures(
 			'RevisionComment','RevisionCommentsRev',
@@ -1091,7 +1123,7 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertEqual($result['Tag'][2]['title'],'Trick');	
 		$this->assertNoErrors('3 tags : %s');
 	}	
-	
+
 	function testHabtmRevRevertToDate() {
 		$this->loadFixtures(
 			'RevisionComment','RevisionCommentsRev',
@@ -1117,14 +1149,14 @@ class RevisionTestCase extends CakeTestCase {
 		$this->Comment->id = 1;
 		$this->Comment->revertToDate(date('Y-m-d H:i:s',strtotime('yesterday')));
 		
-		$result = $this->Comment->find('first', array('recursive'=>1));   //'contain' => array('Tag' => array('id','title'))));
+		$result = $this->Comment->find('first', array('recursive'=>1));  
 		$this->assertEqual(sizeof($result['Tag']),3);
 		$this->assertEqual($result['Tag'][0]['title'],'Fun');
 		$this->assertEqual($result['Tag'][1]['title'],'Hard');
 		$this->assertEqual($result['Tag'][2]['title'],'Trick');	
 		$this->assertNoErrors('3 tags : %s');
 	}
-	
+
 	function testRevertToTheTagsCommentHadBefore() {
 		$this->loadFixtures(
 			'RevisionComment','RevisionCommentsRev',
@@ -1174,6 +1206,27 @@ class RevisionTestCase extends CakeTestCase {
 
 	}
 	
+	function testSaveWithOutTags() {
+		$this->loadFixtures(
+			'RevisionComment','RevisionCommentsRev',
+			'RevisionCommentsRevisionTag','RevisionCommentsRevisionTagsRev',
+			'RevisionTag','RevisionTagsRev'
+		);
+		
+		$this->Comment->bindModel(array('hasAndBelongsToMany' => array(
+				'Tag' => array('className' => 'RevisionTag'))),false);
+    
+	    $this->Comment->id = 1;
+	    $newest = $this->Comment->newest();
+		
+	    $this->Comment->save(array(
+	      'Comment' => array('id'=>1,'title'=>'spam')
+	    ));
+	    
+	    $result = $this->Comment->newest();
+	    $this->assertEqual($newest['Comment']['Tag'], $result['Comment']['Tag']);
+	}
+	
 	function testRevertToDeletedTag() {
 		$this->loadFixtures(
 			'RevisionComment','RevisionCommentsRev',
@@ -1186,7 +1239,7 @@ class RevisionTestCase extends CakeTestCase {
 		
 		$this->Comment->Tag->delete(1);
 		
-		$result = $this->Comment->shadow('all', array('conditions'=>array('version_id'=>array(4,5))));
+		$result = $this->Comment->ShadowModel->find('all', array('conditions'=>array('version_id'=>array(4,5))));
 		$this->assertEqual($result[0]['Comment']['Tag'],'3');
 		$this->assertEqual($result[1]['Comment']['Tag'],'2,3');
 	}
@@ -1246,8 +1299,8 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertError();
 		$this->assertFalse($this->User->revertTo(2));
 		$this->assertError();
-		$this->assertFalse($this->User->revertToDate('1970-01-01'));
-		$this->assertError();
+		$this->assertTrue($this->User->revertToDate('1970-01-01'));
+		$this->assertNoErrors();
 		$this->assertFalse($this->User->revisions());
 		$this->assertError();
 		$this->assertFalse($this->User->undo());
@@ -1256,10 +1309,7 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertError();
 		$this->assertFalse($this->User->updateRevisions());
 		$this->assertError();
-		$this->assertFalse($this->User->shadow());
-		$this->assertError();
-		
 	}
-
+/* */
 }
 ?>

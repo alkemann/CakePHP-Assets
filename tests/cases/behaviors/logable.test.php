@@ -625,5 +625,31 @@ class LogableCase extends CakeTestCase {
 		);
 		$this->assertEqual($expected,$result);		
 	}
+	
+	function testCustomLog() {
+		$this->LogableBook->setUserData(array('LogableUser'=>array('id'=>66,'name'=>'Alexander')));
+		$this->LogableBook->customLog(
+			'custom event',
+			1,
+			array(
+				'description' => 'Book custom event'
+			)
+		);
+		$result = $this->Log->find('first');
+		$expected = array(
+	    	'Log' => array(
+	            'id' => 6,
+	            'title' => 'Fourth Book',
+	            'model' => 'LogableBook',
+	            'model_id' => 1,
+	            'action' => 'custom event',
+	            'user_id' => 66,
+	            'change' => null,
+	            'description' => 'Book custom event by LogableUser "Alexander" (66).',
+	        )		
+		);
+		$this->assertEqual($expected,$result);
+	}
+
 }
 ?>
