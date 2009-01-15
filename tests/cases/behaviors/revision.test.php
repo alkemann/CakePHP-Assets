@@ -384,7 +384,7 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertEqual($expected, $result);
 	}	
 		
-	function testUndo() {				
+	function testUndoEdit() {				
 		$this->loadFixtures('RevisionPost','RevisionPostsRev');
 		
 		$data = array('Post' => array('id'=>1, 'title' => 'Edited Post 1'));
@@ -408,7 +408,28 @@ class RevisionTestCase extends CakeTestCase {
 		);
 		$this->assertEqual($expected, $result);
 	}
+
+	function testUndoCreate() {
+		$this->loadFixtures('RevisionPost','RevisionPostsRev');
 		
+		$this->Post->create(array('Post' => array('title' => 'New post','content' => 'asd')));
+		$this->Post->save();
+		
+		$result = $this->Post->read();
+		$this->assertEqual($result['Post']['title'],'New post');
+		$id = $this->Post->id;
+		
+		$this->Post->undo();
+		
+		$this->Post->id = $id;
+		$this->assertFalse($this->Post->read());
+		
+		$this->Post->undelete();
+		$result = $this->Post->read();
+		$this->assertEqual($result['Post']['title'],'New post');		
+		
+	}
+	
 	function testRevertTo() {
 		$this->loadFixtures('RevisionPost','RevisionPostsRev');
 		
