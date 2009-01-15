@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 1.2.8
+ * Revision Behavior 2.0
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -88,15 +88,16 @@
  * 1.2 => 1.2.1
  *   - api change in revertToDate, added paramter for force delete if reverting to before earliest
  * 
- * 1.2.6 => 1.2.7
+ * 1.2.6 => 2.0
  * 	 - api change: removed shadow(), changed revertToDate() to only recurse into related models that
  *     are dependent when cascade is true
- * 
+ *
+ *
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 14. january 2009
- * @version 1.2.8
+ * @modifed 15. january 2009
+ * @version 2.0
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -523,7 +524,7 @@ class RevisionBehavior extends ModelBehavior {
 		/* If no previous version was found and revertToDate() was called with force_delete, then delete the live data, else leave it alone */
 		if ($data == false) {
 			if ($force_delete) {
-				$Model->logable_action['Revision'] = 'revertToDate('.$datetime.') delete';
+				$Model->logableAction['Revision'] = 'revertToDate('.$datetime.') delete';
 				return $Model->delete($Model->id);
 			}
 			return true;
@@ -540,9 +541,9 @@ class RevisionBehavior extends ModelBehavior {
 	       		'contain'=> $habtm,
 	       		'conditions'=>array($Model->alias.'.'.$Model->primaryKey => $Model->id)));
 		
-		$Model->logable_action['Revision'] = 'revertToDate('.$datetime.') add';
+		$Model->logableAction['Revision'] = 'revertToDate('.$datetime.') add';
 		if ($liveData) {
-			$Model->logable_action['Revision'] = 'revertToDate('.$datetime.') edit';
+			$Model->logableAction['Revision'] = 'revertToDate('.$datetime.') edit';
 			if (!empty($Model->hasAndBelongsToMany)) {
 				foreach (array_keys($Model->hasAndBelongsToMany) as $assocAlias) {
 					if (isset($Model->ShadowModel->_schema[$assocAlias])) {		
@@ -691,6 +692,7 @@ class RevisionBehavior extends ModelBehavior {
 		}   
 		$data = $this->previous($Model);
 		if ($data == false) {
+			$Model->logableAction['Revision'] = 'undo add';
 			$Model->delete($Model->id);
 			return false;
 		}		
@@ -701,7 +703,7 @@ class RevisionBehavior extends ModelBehavior {
 				} 
 			}
 		}			
-		$Model->logable_action['Revision'] = 'undo';
+		$Model->logableAction['Revision'] = 'undo changes';
 		return $Model->save($data);
 	}	
 	

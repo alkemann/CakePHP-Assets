@@ -55,8 +55,8 @@
  * @co-author Ronny Vindenes
  * @co-author Carl Erik Fyllingen
  * @category Behavior
- * @version 1.3.6
- * @modified 14.jan 2009 by alexander
+ * @version 2.0
+ * @modified 15.jan 2008 by alexander
  */
 
 class LogableBehavior extends ModelBehavior 
@@ -339,7 +339,7 @@ class LogableBehavior extends ModelBehavior
 		}
 		$keys = array_keys($Model->data[$Model->alias]);
 		$diff = array_diff($keys,$this->settings[$Model->alias]['ignore']);
-		if (sizeof($diff) == 0) {
+		if (sizeof($diff) == 0 && empty($Model->logableAction)) {
 			return false;
 		}
      	if ($Model->id) {
@@ -438,9 +438,9 @@ class LogableBehavior extends ModelBehavior
 		
     	if (!isset($this->Log->_schema[ 'action' ])) {
     		unset($logData['Log']['action']);
-    	} elseif (isset($Model->version_action)) {
-    		$logData['Log']['action'] = $Model->version_action . ' '.$logData['Log']['action'];
-    		unset($Model->version_action);
+    	} elseif (isset($Model->logableAction) && !empty($Model->logableAction)) {
+    		$logData['Log']['action'] = implode(',',$Model->logableAction); // . ' ' . $logData['Log']['action'];
+    		unset($Model->logableAction);
     	}
     	
     	if (isset($this->Log->_schema[ 'version_id' ]) && isset($Model->version_id)) {
