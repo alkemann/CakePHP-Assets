@@ -520,10 +520,10 @@ class RevisionBehavior extends ModelBehavior {
 			),
 			'order'=>'version_created ASC, version_id ASC'
 		));
-		$Model->version_action = 'revertToDate('.$datetime.')';
 		/* If no previous version was found and revertToDate() was called with force_delete, then delete the live data, else leave it alone */
 		if ($data == false) {
 			if ($force_delete) {
+				$Model->logable_action['Revision'] = 'revertToDate('.$datetime.') delete';
 				return $Model->delete($Model->id);
 			}
 			return true;
@@ -539,7 +539,10 @@ class RevisionBehavior extends ModelBehavior {
 		$liveData = $Model->find('first', array(
 	       		'contain'=> $habtm,
 	       		'conditions'=>array($Model->alias.'.'.$Model->primaryKey => $Model->id)));
+		
+		$Model->logable_action['Revision'] = 'revertToDate('.$datetime.') add';
 		if ($liveData) {
+			$Model->logable_action['Revision'] = 'revertToDate('.$datetime.') edit';
 			if (!empty($Model->hasAndBelongsToMany)) {
 				foreach (array_keys($Model->hasAndBelongsToMany) as $assocAlias) {
 					if (isset($Model->ShadowModel->_schema[$assocAlias])) {		
@@ -688,6 +691,7 @@ class RevisionBehavior extends ModelBehavior {
 		}   
 		$data = $this->previous($Model);
 		if ($data == false) {
+			$Model->delete($Model->id);
 			return false;
 		}		
 		if (!empty($Model->hasAndBelongsToMany)) {
@@ -697,7 +701,7 @@ class RevisionBehavior extends ModelBehavior {
 				} 
 			}
 		}			
-		$Model->version_action = 'undo';
+		$Model->logable_action['Revision'] = 'undo';
 		return $Model->save($data);
 	}	
 	
