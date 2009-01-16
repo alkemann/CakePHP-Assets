@@ -613,8 +613,8 @@ class RevisionBehavior extends ModelBehavior {
 			$options['conditions'] = array($Model->alias.'.'.$Model->primaryKey => $Model->id);	
 		}	
 		if ( $include_current == false ) {
-            $current = $this->newest($Model, array('fields'=>array('version_id',$Model->primaryKey)));
-            $options['conditions']['version_id !='] = $current[$Model->alias]['version_id'];
+            $current = $this->newest($Model, array('fields'=>array($Model->alias.'.version_id',$Model->primaryKey)));
+            $options['conditions'][$Model->alias.'.version_id !='] = $current[$Model->alias]['version_id'];
 		}	
 		return $Model->ShadowModel->find('all',$options);
 	}
