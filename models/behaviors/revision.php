@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 2.0
+ * Revision Behavior 1.2.8
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -88,16 +88,15 @@
  * 1.2 => 1.2.1
  *   - api change in revertToDate, added paramter for force delete if reverting to before earliest
  * 
- * 1.2.6 => 2.0
+ * 1.2.6 => 1.2.7
  * 	 - api change: removed shadow(), changed revertToDate() to only recurse into related models that
  *     are dependent when cascade is true
- *
- *
+ * 
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 15. january 2009
- * @version 2.0
+ * @modifed 14. january 2009
+ * @version 1.2.8
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -298,10 +297,11 @@ class RevisionBehavior extends ModelBehavior {
             return null;
 		}   
 		if (isset($options['conditions'])) {
-			$options['conditions'] = am($options['conditions'],array($Model->primaryKey => $Model->id));	
+			$options['conditions'] = am($options['conditions'],array($Model->alias.'.'.$Model->primaryKey => $Model->id));	
 		} else {
-			$options['conditions'] = array( $Model->primaryKey => $Model->id);	
+			$options['conditions'] = array( $Model->alias.'.'.$Model->primaryKey => $Model->id);	
 		}			
+	
 		return $Model->ShadowModel->find('first',$options);
 	}
 
@@ -608,9 +608,9 @@ class RevisionBehavior extends ModelBehavior {
             return null;
 		}   
 		if (isset($options['conditions'])) {
-			$options['conditions'] = am($options['conditions'],array($Model->primaryKey => $Model->id));	
+			$options['conditions'] = am($options['conditions'],array($Model->alias.'.'.$Model->primaryKey => $Model->id));	
 		} else {
-			$options['conditions'] = array( $Model->primaryKey => $Model->id);	
+			$options['conditions'] = array($Model->alias.'.'.$Model->primaryKey => $Model->id);	
 		}	
 		if ( $include_current == false ) {
             $current = $this->newest($Model, array('fields'=>array('version_id',$Model->primaryKey)));
