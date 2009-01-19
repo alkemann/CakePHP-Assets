@@ -19,12 +19,17 @@ class OrderedCase extends CakeTestCase {
     public $OrderedBook = NULL;
 	public $fixtures = array('app.ordered_page', 'app.ordered_book', 'app.ordered_mark');
 
-	function start() {
-		parent::start();
+	function startTest() {
 		$this->OrderedPage = ClassRegistry::init('OrderedPage');
 		$this->OrderedMark = ClassRegistry::init('OrderedMark');
 		$this->OrderedBook = ClassRegistry::init('OrderedBook');
 	}	
+	function endTest() {
+		unset($this->OrderedPage);
+		unset($this->OrderedMark);
+		unset($this->OrderedBook);
+		ClassRegistry::flush();
+	}
 	private function findPagesByBook($book_id) {
 		return $this->OrderedPage->find('all', array(
 				'conditions' => array('book_id' => $book_id), 
@@ -105,6 +110,29 @@ class OrderedCase extends CakeTestCase {
 		$expected = array('OrderedPage' => array('id' => $id, 'title'=>'Last Page','book_id'=>2, 'weight' => 3));
 		$this->assertEqual($result, $expected);  
 	}
+
+	function testNeighbors() {
+		$result = $this->OrderedBook->find('neighbors',array(
+			'value' => 3,
+			'field' => 'weight'
+		));
+		$this->assertEqual(sizeof($result),2);
+		$this->assertEqual($result['prev']['OrderedBook'],array('id'=>1,'title'=>'Second Book','weight'=>2));
+		$this->assertEqual($result['next']['OrderedBook'],array('id'=>5,'title'=>'Fourth Book','weight'=>4));
+	}
+	function testNeighbors2() {
+		$this->OrderedBook->id = 4;
+		$result = $this->OrderedBook->neighbors(); // neighbors of book with id 4
+		$this->assertEqual(sizeof($result),2);
+		$this->assertEqual($result['prev']['OrderedBook'],array('id'=>1,'title'=>'Second Book','weight'=>2));
+		$this->assertEqual($result['next']['OrderedBook'],array('id'=>5,'title'=>'Fourth Book','weight'=>4));
+	}
+	function testNeighbors3() {
+		$result = $this->OrderedBook->neighbors(3); // neighbors of book with weight 3
+		$this->assertEqual(sizeof($result),2);
+		$this->assertEqual($result['prev']['OrderedBook'],array('id'=>1,'title'=>'Second Book','weight'=>2));
+		$this->assertEqual($result['next']['OrderedBook'],array('id'=>5,'title'=>'Fourth Book','weight'=>4));
+	}	
 
 	function testMoveThirdPageUp() {
 		$this->OrderedPage->moveUp(4);
@@ -693,34 +721,6 @@ class OrderedCase extends CakeTestCase {
 		
 		$this->OrderedMark->Behaviors->detach('SoftDeletable');
 	}
+/**/
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ?>

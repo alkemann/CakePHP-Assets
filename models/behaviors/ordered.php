@@ -412,14 +412,41 @@ class OrderedBehavior extends ModelBehavior {
 		}
 	}
 	
+	/**
+	 * Returns the next and previews rows relative to the behaviors weight
+	 *
+	 * @param object $Model
+	 * @param int $value
+	 * @return boolean
+	 */
+	public function neighbors(&$Model, $value = null) {
+		if (!$value) {
+			if (!empty($Model->data) && isset($Model->data[$Model->alias][$this->settings[$Model->alias]['field']])) {
+				$value = $Model->data[$Model->alias][$this->settings[$Model->alias]['field']];
+			} else {
+				if ($Model->id) {
+					$value = $Model->field($this->settings[$Model->alias]['field']);
+				} else {
+					return false;
+				}
+			}
+		}
+		return $Model->find('neighbors',array(
+			'value' => $value,
+			'field' => $this->settings[$Model->alias]['field']
+		));
+	}
+	
 	public function newWeight($Model, $foreignKey = null) {
-		if (!$foreignKey && $this->settings[$Model->alias]['foreign_key'] != false) {
-			return false;
+		if ( (!$foreignKey && $this->settings[$Model->alias]['foreign_key'] != false) || 
+			( !isset($Model->data[$Model->alias][$this->settings[$Model->alias]['foreign_key']]) 
+			&& !isset($Model->id)) ) {
+			
+				return false;
 		}
-		if (!$foreignKey) {
-			$highest = $this->_highest($Model);
-			return $highest[$Model->alias][$this->settings[$Model->alias]['field']] + 1;
-		}
+		$highest = $this->_highest($Model);
+		return $highest[$Model->alias][$this->settings[$Model->alias]['field']] + 1;
+		
 	}	
 	
 	/**
@@ -545,7 +572,6 @@ class OrderedBehavior extends ModelBehavior {
 			$Model->data = null;
 		}
 	}
-		
 	/**
 	 * Sets the weight for new items so they end up at end
 	 *
