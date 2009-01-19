@@ -45,24 +45,36 @@ class OrderedCase extends CakeTestCase {
         $expected = array('OrderedPage' => array('title' => 'Front Page', 'weight' => 1));        
 		$this->assertEqual($result, $expected);  
 		
+		$this->OrderedPage->create();
 		 $this->assertTrue($this->OrderedPage->isFirst(2));  
+		$this->OrderedPage->create();
 		$this->assertFalse($this->OrderedPage->isFirst(1));  
-		$this->assertFalse($this->OrderedPage->isFirst(4));  
-		$this->assertFalse($this->OrderedPage->isFirst(5));  
-	 	 $this->assertTrue($this->OrderedPage->isFirst(3));  
+		$this->OrderedPage->create();
+		$this->assertFalse($this->OrderedPage->isFirst(4)); 
+		$this->OrderedPage->create(); 
+		$this->assertFalse($this->OrderedPage->isFirst(5)); 
+		$this->OrderedPage->create(); 
+	 	 $this->assertTrue($this->OrderedPage->isFirst(3)); 
+		$this->OrderedPage->create(); 
 		$this->assertFalse($this->OrderedPage->isFirst(6)); 
 		
+		$this->OrderedPage->create();
 		$this->assertFalse($this->OrderedPage->isLast(2));  
+		$this->OrderedPage->create();
 		$this->assertFalse($this->OrderedPage->isLast(1));  
+		$this->OrderedPage->create();
 		$this->assertFalse($this->OrderedPage->isLast(4));  
+		$this->OrderedPage->create();
 		 $this->assertTrue($this->OrderedPage->isLast(5));  
+		$this->OrderedPage->create();
 		$this->assertFalse($this->OrderedPage->isLast(3));  
+		$this->OrderedPage->create();
 		 $this->assertTrue($this->OrderedPage->isLast(6));  
 		 
 		 // No params illegal if not set in id or data
-		 $this->OrderedPage->id = NULL; $this->OrderedPage->data = NULL;
+		$this->OrderedPage->create();
 		 $this->assertFalse($this->OrderedPage->isFirst());  
-		 $this->OrderedPage->id = NULL; $this->OrderedPage->data = NULL;
+		$this->OrderedPage->create();
 		 $this->assertFalse($this->OrderedPage->isLast());  
 		 
 		 // No params legal if set in properties Id or Data
@@ -245,18 +257,30 @@ class OrderedCase extends CakeTestCase {
         $expected = array('OrderedMark' => array('title' => 'First Mark', 'nose' => 1));        
 		$this->assertEqual($result, $expected);  
 		
-		$this->assertFalse($this->OrderedMark->isLast(1));  
+		$this->OrderedMark->create();
+		$this->assertFalse($this->OrderedMark->isLast(1)); 
+		$this->OrderedMark->create(); 
 		$this->assertFalse($this->OrderedMark->isLast(2));  
+		$this->OrderedMark->create();
 		$this->assertFalse($this->OrderedMark->isLast(3));  
+		$this->OrderedMark->create();
 	 	 $this->assertTrue($this->OrderedMark->isLast(4));  
-		$this->assertFalse($this->OrderedMark->isLast(5));  
+		$this->OrderedMark->create();
+		$this->assertFalse($this->OrderedMark->isLast(5)); 
+		$this->OrderedMark->create(); 
 	  	 $this->assertTrue($this->OrderedMark->isLast(6));  
 		
+		$this->OrderedMark->create();
 		 $this->assertTrue($this->OrderedMark->isFirst(1));  
+		$this->OrderedMark->create();
 		$this->assertFalse($this->OrderedMark->isFirst(2));  
+		$this->OrderedMark->create();
 		$this->assertFalse($this->OrderedMark->isFirst(3));  
+		$this->OrderedMark->create();
 		$this->assertFalse($this->OrderedMark->isFirst(4));  
+		$this->OrderedMark->create();
 		 $this->assertTrue($this->OrderedMark->isFirst(5));  
+		$this->OrderedMark->create();
 		$this->assertFalse($this->OrderedMark->isFirst(6));  
 	}
 

@@ -493,7 +493,7 @@ class OrderedBehavior extends ModelBehavior {
 		}
 		$Model->read();
 		
-		$first = $this->_read($Model, $id);
+	//	$first = $this->_read($Model, $id);
 		if ($Model->data[$Model->alias][$this->settings[$Model->alias]['field']] == 1) {
 			return true;
 		} else {
@@ -520,7 +520,6 @@ class OrderedBehavior extends ModelBehavior {
 		} else {
 			$Model->id = $id;
 		}
-		$Model->read();
 		$last = $this->_highest($Model);
 		return ($last[$Model->alias][$Model->primaryKey] == $id);
 	}
@@ -580,11 +579,12 @@ class OrderedBehavior extends ModelBehavior {
 				'fields' => array($Model->primaryKey, $this->settings[$Model->alias]['field']), 
 				'recursive' => -1);
 		if ($this->settings[$Model->alias]['foreign_key']) {
-			if (empty($Model->data) || !isset($Model->data[$Model->alias][$this->settings[$Model->alias]['foreign_key']])) {
-				$this->_read($Model, $Model->id);
-			}
-			$options['conditions'] = array(
-					$Model->alias . '.' . $this->settings[$Model->alias]['foreign_key'] => $Model->data[$Model->alias][$this->settings[$Model->alias]['foreign_key']]);
+			if ( !empty($Model->data) && isset($Model->data[$Model->alias][$this->settings[$Model->alias]['foreign_key']]) ) {
+				$foreignKey = $Model->data[$Model->alias][$this->settings[$Model->alias]['foreign_key']];
+			} else {
+				$foreignKey = $Model->field($this->settings[$Model->alias]['foreign_key']);
+			}			
+			$options['conditions'] = array($Model->alias .'.'. $this->settings[$Model->alias]['foreign_key'] => $foreignKey);
 			$options['fields'][] = $this->settings[$Model->alias]['foreign_key'];
 		}
 		$temp_model_id = $Model->id;
