@@ -12,6 +12,7 @@ class OrderedPage extends CakeTestModel {
 class OrderedMark extends CakeTestModel {
 	public $name = 'OrderedMark';
 	public $actsAs = array('Ordered' => array('field' => 'nose'));	
+	
 }
 class OrderedCase extends CakeTestCase {
     public $OrderedPage = NULL;
@@ -720,6 +721,71 @@ class OrderedCase extends CakeTestCase {
 		
 		
 		$this->OrderedMark->Behaviors->detach('SoftDeletable');
+	}
+	
+	function testCustomNewWeightFirst() {
+		$this->OrderedMark->create(array('OrderedMark'=>array(
+			'title' => 'Haha', 'order_id' => 1
+		)));
+		$this->OrderedMark->save();
+		$this->OrderedMark->moveTo($this->OrderedMark->id,1);
+		$result = $this->OrderedMark->find('all',array(
+			'conditions' => array('order_id' => 1),
+			'fields'=>array('id','nose','title')));
+		$this->assertEqual($result[0]['OrderedMark']['nose'],1);
+		$this->assertEqual($result[0]['OrderedMark']['title'],'Haha');
+		$this->assertEqual($result[4]['OrderedMark']['nose'],5);
+		$this->assertEqual($result[4]['OrderedMark']['title'],'Fourth Mark');
+	}	
+	
+	function testCustomNewWeightAlpha() {		
+		$this->OrderedMark->sortby('title',1);
+		$this->OrderedMark->create(array('OrderedMark'=>array(
+			'title' => 'Haha', 'order_id' => 1
+		)));
+		$this->OrderedMark->save();
+		
+		$this->OrderedMark->sortedPlace('title');
+		
+		$result = $this->OrderedMark->find('all',array(
+			'conditions' => array('order_id' => 1),
+			'fields'=>array('id','nose','title')));
+		$this->assertEqual($result[0]['OrderedMark']['nose'],1);
+		$this->assertEqual($result[0]['OrderedMark']['title'],'First Mark');
+		$this->assertEqual($result[2]['OrderedMark']['nose'],3);
+		$this->assertEqual($result[2]['OrderedMark']['title'],'Haha');
+		$this->assertEqual($result[4]['OrderedMark']['nose'],5);
+		$this->assertEqual($result[4]['OrderedMark']['title'],'Third Mark');
+	}	
+	
+	function testCustomNewWeightAlphaXx() {		
+		$this->OrderedMark->sortby('title',1);
+		$this->OrderedMark->create(array('OrderedMark'=>array(
+			'title' => 'Xx', 'order_id' => 1
+		)));
+		$this->OrderedMark->save();
+		$this->OrderedMark->sortedPlace('title');
+
+		$result = $this->OrderedMark->find('all',array(
+			'conditions' => array('order_id' => 1),
+			'fields'=>array('id','nose','title')));
+		$this->assertEqual($result[4]['OrderedMark']['nose'],5);
+		$this->assertEqual($result[4]['OrderedMark']['title'],'Xx');
+	}	
+	
+	function testCustomNewWeightAlphaAa() {		
+		$this->OrderedMark->sortby('title',1);
+		$this->OrderedMark->create(array('OrderedMark'=>array(
+			'title' => 'Aa', 'order_id' => 1
+		)));
+		$this->OrderedMark->save();
+		$this->OrderedMark->sortedPlace('title');
+
+		$result = $this->OrderedMark->find('all',array(
+			'conditions' => array('order_id' => 1),
+			'fields'=>array('id','nose','title')));
+		$this->assertEqual($result[0]['OrderedMark']['nose'],1);
+		$this->assertEqual($result[0]['OrderedMark']['title'],'Aa');
 	}
 /**/
 }
