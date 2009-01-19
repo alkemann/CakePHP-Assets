@@ -2,10 +2,6 @@
 /**
  * OrderedBehavior
  *
- * @developer Alexander Morland ( aka. alkemann)
- * @license MIT
- * @version 2.1
- * @modified 27. august 2008
  *
  * This behavior lets you order items in a very similar way to the tree
  * behavior, only there is only 1 level. You can however have many 
@@ -97,8 +93,8 @@
  * 
  * @author Alexander Morland aka alkemann
  * @license MIT
- * @modified 17. nov. 2008 (model independent settings)
- * @version 2.1.3
+ * @version 2.1.4
+ * @modified 19. jan 2009
  * 
  */
 class OrderedBehavior extends ModelBehavior {
@@ -155,7 +151,15 @@ class OrderedBehavior extends ModelBehavior {
 	public function beforesave(&$Model) {
 		//	Check if weight id is set. If not add to end, if set update all
 		// rows from ID and up
-		if (!isset($Model->data[$Model->alias][$Model->primaryKey])) {
+		if (
+			!isset($Model->data[$Model->alias][$Model->primaryKey]) 
+				|| 
+			(
+				isset($Model->data[$Model->alias][$this->settings[$Model->alias]['field']]) 
+					&& 
+				!is_numeric($Model->data[$Model->alias][$this->settings[$Model->alias]['field']]) 
+			) 
+		) {
 			// get highest current row
 			$highest = $this->_highest($Model);
 			// set new weight to model as last by using current highest one + 1
@@ -351,44 +355,19 @@ class OrderedBehavior extends ModelBehavior {
 	 * @param Object $Model
 	 * @return boolean success
 	 */
-	public function resetweights(&$Model) {
+	public function resetweights(&$Model) {		
 		if ($this->settings[$Model->alias]['foreign_key']) {
 			$temp = $Model->find('all', array(
-					'fields' => $this->settings[$Model->alias]['foreign_key'], 
-					'group' => $this->settings[$Model->alias]['foreign_key'], 
+					'fields' => 'DISTINCT '.$this->settings[$Model->alias]['foreign_key'], 
 					'recursive' => -1));
-			$foreign_keys = Set::extract($temp, '{n}.' . $Model->alias . '.' . $this->settings[$Model->alias]['foreign_key']);
+			$foreign_keys = Set::extract($temp, '/'.$Model->alias.'/'.$this->settings[$Model->alias]['foreign_key']);
 			foreach ($foreign_keys as $fk) {
-				$all = $Model->find('all', array(
-						'conditions' => array($this->settings[$Model->alias]['foreign_key'] => $fk), 
-						'fields' => array(
-								$Model->displayField, 
-								$Model->primaryKey, 
-								$this->settings[$Model->alias]['field'], 
-								$this->settings[$Model->alias]['foreign_key']), 
-						'order' => $Model->displayField));
-				$i = 1;
-				foreach ($all as $key => $one) {
-					$all[$key][$Model->alias][$this->settings[$Model->alias]['field']] = $i++;
-				}
-				if (!$Model->saveAll($all)) {
+				if (!$this->sortby($Model,$Model->displayField, $fk)) {
 					return false;
 				}
 			}
-		} else {
-			$all = $Model->find('all', array(
-					'fields' => array(
-							$Model->displayField, 
-							$Model->primaryKey, 
-							$this->settings[$Model->alias]['field']), 
-					'order' => $Model->displayField));
-			$i = 1;
-			foreach ($all as $key => $one) {
-				$all[$key][$Model->alias][$this->settings[$Model->alias]['field']] = $i++;
-			}
-			if (!$Model->saveAll($all)) {
-				return false;
-			}
+		} else {		
+			return $this->sortby($Model,$Model->displayField);
 		}
 		return true;
 	}
@@ -583,6 +562,16 @@ class OrderedBehavior extends ModelBehavior {
 				'order' => $this->settings[$Model->alias]['field'] . ' DESC', 
 				'fields' => $fields, 
 				'recursive' => -1));
+	}
+	
+	public function newWeight($Model, $foreignKey = null) {
+		if (!$foreignKey && $this->settings[$Model->alias]['foreign_key'] != false) {
+			return false;
+		}
+		if (!$foreignKey) {
+			$highest = $this->_highest($Model);
+			return $highest[$Model->alias][$this->settings[$Model->alias]['field']] + 1;
+		}
 	}
 	
 	private function _highest(&$Model) {

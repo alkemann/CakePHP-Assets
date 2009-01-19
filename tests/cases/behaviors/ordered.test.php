@@ -563,6 +563,17 @@ class OrderedCase extends CakeTestCase {
 		$this->assertEqual($result, $expected, 'ResetWeights : %s'); 		
 	}
 	
+	function testResetWeightsMark() {
+		$this->OrderedBook->resetweights();
+		$result = $this->OrderedBook->find('all');
+		$this->assertEqual($result[0]['OrderedBook']['title'],'Fifth Book');
+		$this->assertEqual($result[1]['OrderedBook']['title'],'First Book');
+		$this->assertEqual($result[2]['OrderedBook']['title'],'Fourth Book');
+		$this->assertEqual($result[3]['OrderedBook']['title'],'Second Book');
+		$this->assertEqual($result[4]['OrderedBook']['title'],'Sixth Book');
+		$this->assertEqual($result[5]['OrderedBook']['title'],'Third Book');
+	}
+	
 	function testWithSoftDelete() { 
 		$this->OrderedMark->Behaviors->attach('SoftDeletable');
 		$result = $this->OrderedMark->find('all', array('conditions'=>array('order_id'=>1), 'fields' => array('id','nose','deleted')));
