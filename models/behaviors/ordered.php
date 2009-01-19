@@ -235,7 +235,7 @@ class OrderedBehavior extends ModelBehavior {
 						$this->settings[$Model->alias]['field'] => $this->settings[$Model->alias]['field'] . ' - 1'), $conditions);
 				
 				// set Model weight to new weight and save it
-				$Model->data[$Model->alias][$this->settings[$Model->alias]['field']] = $new_weight;
+				$Model->set($this->settings[$Model->alias]['field'], $new_weight);
 				return $Model->save(null, false);
 			}
 		
@@ -299,7 +299,7 @@ class OrderedBehavior extends ModelBehavior {
 		}
 		
 		// give Model new weight	
-		$Model->data[$Model->alias][$this->settings[$Model->alias]['field']] = $new_weight;
+		$Model->set($this->settings[$Model->alias]['field'], $new_weight);
 		if ($new_weight == $old_weight) {
 			// move to same location?
 			return false;
@@ -389,7 +389,7 @@ class OrderedBehavior extends ModelBehavior {
 						$this->settings[$Model->alias]['field'] => $Model->alias . '.' . $this->settings[$Model->alias]['field'] . ' + 1'), $conditions);
 				
 				// set Model weight to new weight and save it
-				$Model->data[$Model->alias][$this->settings[$Model->alias]['field']] = $new_weight;
+				$Model->set($this->settings[$Model->alias]['field'], $new_weight);
 				return $Model->save(null, false);
 			}
 		} elseif (is_bool($number) && $number && $Model->data[$Model->alias][$this->settings[$Model->alias]['field']] != 1) { // move Model FIRST;
@@ -404,7 +404,7 @@ class OrderedBehavior extends ModelBehavior {
 			$Model->id = $Model->data[$Model->alias][$Model->primaryKey];
 			$Model->saveField($this->settings[$Model->alias]['field'], 0);
 			$Model->updateAll(array( // update
-					$Model->alias . '.' . $this->settings[$Model->alias]['field'] => $Model->alias . '.' . $this->settings[$Model->alias]['field'] . ' + 1'), $conditions);
+				$Model->alias . '.' . $this->settings[$Model->alias]['field'] => $Model->alias . '.' . $this->settings[$Model->alias]['field'] . ' + 1'), $conditions);
 			
 			return true;
 		} else { // $number is neither a number nor a bool
@@ -485,54 +485,7 @@ class OrderedBehavior extends ModelBehavior {
 		}
 		return true;
 	}
-	
-	public function sortedPlace(&$Model, $order = null) {
-		if (!$Model->id) {
-			return NULL;
-		}
-		if (!$order) {
-			if ($Model->order) {
-				$order = $Model->order;
-			} else {
-				$order = $Model->displayField;
-			}			
-		}
-		if (empty($Model->data)) {
-			$Model->read();
-		}
-		if (is_string($order)) {
-			$field_value = array($order => $Model->data[$Model->alias][$order] );
-		} elseif (is_array($order)) {
-			foreach ($order as $field) {
-				$field_value[$field] = $Model->data[$Model->alias][$field];				
-			}			
-		} else {
-			return null;
-		}
-		if ($this->settings[$Model->alias]['foreign_key']) {
-			$conditions = array(
-				$this->settings[$Model->alias]['foreign_key'] => 
-					$Model->data[$Model->alias][$this->settings[$Model->alias]['foreign_key']]
-			);
-		} else {
-			$conditions = array();
-		}
-		foreach ($field_value as $field => $value) {
-			$conditions[$field.' >'] = $value; 
-		}
-		$after = $Model->find('first',array(
-			'order' => $order,
-			'conditions' => $conditions
-		));
-		if (!$after) {
-			return false;
-		}
-		return $this->moveto($Model,
-			$Model->id,
-			$after[$Model->alias][$this->settings[$Model->alias]['field']]
-		);		
-	}
-	
+
 	/**
 	 * Take in an order array and sorts the list based on that order specification
 	 * and creates new weights for it. If no foreign key is supplied, all lists
@@ -580,8 +533,7 @@ class OrderedBehavior extends ModelBehavior {
 		if ($Model->data) {
 			// What was the weight of the deleted model?		
 			$old_weight = $Model->data[$Model->alias][$this->settings[$Model->alias]['field']];
-			// update the weight of all models of higher weight by
-			
+			// update the weight of all models of higher weight by			
 
 			$action = array($this->settings[$Model->alias]['field'] => $this->settings[$Model->alias]['field'] . ' - 1');
 			$conditions = array(
