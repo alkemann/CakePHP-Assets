@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 1.2.9
+ * Revision Behavior 2.0.1
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -95,8 +95,8 @@
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 22. january 2009
- * @version 1.2.9
+ * @modifed 23. january 2009
+ * @version 2.0.1
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -166,18 +166,24 @@ class RevisionBehavior extends ModelBehavior {
 			trigger_error('RevisionBehavior: ShadowModel doesnt exist.', E_USER_WARNING); 
             return false;
 		}   
-		$Model->read();
-		$Model->ShadowModel->create($Model->data);
-		$Model->ShadowModel->set('version_created', date('Y-m-d H:i:s'));
-		if (!empty($Model->hasAndBelongsToMany)) {
-			foreach (array_keys($Model->hasAndBelongsToMany) as $assocAlias) {
-				if (isset($Model->ShadowModel->_schema[$assocAlias])) {		
-					$foreign_keys = Set::extract($Model->data,'/'.$assocAlias.'/'.$Model->{$assocAlias}->primaryKey);			
-					$Model->ShadowModel->set($assocAlias, implode(',',$foreign_keys));
-				} 
+		$habtm = array();
+		$all_habtm = $Model->getAssociated('hasAndBelongsToMany');
+		foreach ($all_habtm as $assocAlias) {
+			if (isset($Model->ShadowModel->_schema[$assocAlias])) {	
+				$habtm[] = $assocAlias;	
 			}
-		}	
-		return $Model->ShadowModel->save($Model->data,false);
+		}
+		$data = $Model->find('first', array(
+			'conditions'=>array($Model->alias.'.'.$Model->primaryKey => $Model->id), 
+			'contain' => $habtm
+		));
+		$Model->ShadowModel->create($data);
+		$Model->ShadowModel->set('version_created', date('Y-m-d H:i:s'));
+		foreach ($habtm as $assocAlias) {
+			$foreign_keys = Set::extract($data,'/'.$assocAlias.'/'.$Model->{$assocAlias}->primaryKey);			
+			$Model->ShadowModel->set($assocAlias, implode(',',$foreign_keys));
+		}
+		return $Model->ShadowModel->save();
 	}
 	
 	/**
@@ -266,7 +272,8 @@ class RevisionBehavior extends ModelBehavior {
             return false;
 		}   
 		if ($Model->ShadowModel->useTable == false) {
-			trigger_error('RevisionBehavior: Missing shadowtable : '.$Model->table.$this->suffix, E_USER_WARNING); return null;
+			trigger_error('RevisionBehavior: Missing shadowtable : '.$Model->table.$this->suffix, E_USER_WARNING); 
+			return null;
 		}
 		if ($Model->ShadowModel->find('count') != 0) {
 			return false;
@@ -297,7 +304,18 @@ class RevisionBehavior extends ModelBehavior {
 	 * @param int $limit
 	 */
 	private function init(&$Model, $page, $limit) {
-		$all = $Model->find('all', array('limit' => $limit, 'page' => $page));
+		$habtm = array();
+		$all_habtm = $Model->getAssociated('hasAndBelongsToMany');
+		foreach ($all_habtm as $assocAlias) {
+			if (isset($Model->ShadowModel->_schema[$assocAlias])) {	
+				$habtm[] = $assocAlias;	
+			}
+		}
+		$all = $Model->find('all', array(
+			'limit' => $limit, 
+			'page' => $page, 
+			'contain' => $habtm
+		));
 		$version_created = date('Y-m-d H:i:s');
 		foreach ($all as $data) {
 			$Model->ShadowModel->create($data);

@@ -143,7 +143,7 @@ class RevisionTestCase extends CakeTestCase {
 		$this->loadFixtures('RevisionPost','RevisionPostsRev');
 		
 		$this->Post->id = 1;
-        $this->Post->createRevision();
+        $this->assertTrue($this->Post->createRevision());
 	
 		$this->Post->id = 1;
 		$count = $this->Post->ShadowModel->find('count', array('conditions'=>array('id'=>1)));
