@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 1.2.8
+ * Revision Behavior 1.2.9
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -95,8 +95,8 @@
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 14. january 2009
- * @version 1.2.8
+ * @modifed 22. january 2009
+ * @version 1.2.9
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -252,12 +252,15 @@ class RevisionBehavior extends ModelBehavior {
 	 * Will create a current revision of all rows in Model, if none exist.
 	 * Use this if you add the revision to a model that allready has data in
 	 * the DB.
+	 * If you have large tables or big/many fields, use $limit to reduce the 
+	 * number of rows that is run at once.
 	 *
 	 * @example $this->Post->initializeRevisions();
 	 * @param object $Model
+	 * @param int $limit number of rows to initialize in one go
 	 * @return boolean 
 	 */
-	public function initializeRevisions($Model) {
+	public function initializeRevisions($Model, $limit = 100) {
 		if (!$Model->ShadowModel) {
 			trigger_error('RevisionBehavior: ShadowModel doesnt exist.', E_USER_WARNING); 
             return false;
@@ -268,14 +271,39 @@ class RevisionBehavior extends ModelBehavior {
 		if ($Model->ShadowModel->find('count') != 0) {
 			return false;
 		}
-		$all = $Model->find('all');
+		$count = $Model->find('count');
+		if ($limit < $count) {
+			$remaining = $count;
+			for ($p = 1; true; $p++ ) {
+				
+				$this->init($p, $limit);
+				
+				$remaining = $remaining - $limit;
+				if ($remaining <= 0) {
+					break;
+				}
+			}
+		} else {
+			$this->init($Model, 1, $count);
+		}
+		return true;
+	}
+	
+	/**
+	 * saves revisions for rows matching page and limit given
+	 *
+	 * @param object $Model
+	 * @param int $page
+	 * @param int $limit
+	 */
+	private function init($Model, $page, $limit) {
+		$all = $Model->find('all', array('limit' => $limit, 'page' => $page));
 		$version_created = date('Y-m-d H:i:s');
 		foreach ($all as $data) {
 			$Model->ShadowModel->create($data);
 			$Model->ShadowModel->set('version_created', $version_created);
 			$Model->ShadowModel->save();
-		}
-		return true;
+		}		
 	}
 
 	/**
