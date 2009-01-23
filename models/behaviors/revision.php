@@ -260,7 +260,7 @@ class RevisionBehavior extends ModelBehavior {
 	 * @param int $limit number of rows to initialize in one go
 	 * @return boolean 
 	 */
-	public function initializeRevisions($Model, $limit = 100) {
+	public function initializeRevisions(&$Model, $limit = 100) {
 		if (!$Model->ShadowModel) {
 			trigger_error('RevisionBehavior: ShadowModel doesnt exist.', E_USER_WARNING); 
             return false;
@@ -276,7 +276,7 @@ class RevisionBehavior extends ModelBehavior {
 			$remaining = $count;
 			for ($p = 1; true; $p++ ) {
 				
-				$this->init($p, $limit);
+				$this->init($Model, $p, $limit);
 				
 				$remaining = $remaining - $limit;
 				if ($remaining <= 0) {
@@ -296,7 +296,7 @@ class RevisionBehavior extends ModelBehavior {
 	 * @param int $page
 	 * @param int $limit
 	 */
-	private function init($Model, $page, $limit) {
+	private function init(&$Model, $page, $limit) {
 		$all = $Model->find('all', array('limit' => $limit, 'page' => $page));
 		$version_created = date('Y-m-d H:i:s');
 		foreach ($all as $data) {

@@ -546,8 +546,8 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertEqual($result[2]['Article'],$expected);
 		$expected = array('id'=>4, 'lft'=>5, 'rght'=>6, 'parent_id'=>2);
 		$this->assertEqual($result[3]['Article'],$expected);		
-	}
-
+	}	
+	
 	function testIgnore() {
 		$this->loadFixtures('RevisionArticle','RevisionArticlesRev');
 		
@@ -786,7 +786,7 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertEqual($result[4]['Article']['rght'],7);
 	}
 
-	function testInitializeRevisions() {		
+	function testInitializeRevisionsWithLimit() {		
 		$this->loadFixtures(
 			'RevisionPost','RevisionPostsRev',
 			'RevisionArticle','RevisionArticlesRev',
@@ -805,6 +805,16 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertFalse($this->Comment->Tag->initializeRevisions());
 	}
 
+	function testInitializeRevisions() {		
+		$this->loadFixtures('RevisionPost');
+		
+		$this->assertTrue($this->Post->initializeRevisions(2));
+		
+		$result = $this->Post->ShadowModel->find('all');
+		
+		$this->assertEqual(sizeof($result),3);
+	}
+	
 	function testRevertAll() {
 		$this->loadFixtures(
 			'RevisionPost','RevisionPostsRev'
