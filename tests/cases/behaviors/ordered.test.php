@@ -12,7 +12,6 @@ class OrderedPage extends CakeTestModel {
 class OrderedMark extends CakeTestModel {
 	public $name = 'OrderedMark';
 	public $actsAs = array('Ordered' => array('field' => 'nose'));	
-	
 }
 class OrderedCase extends CakeTestCase {
     public $OrderedPage = NULL;
@@ -20,17 +19,12 @@ class OrderedCase extends CakeTestCase {
     public $OrderedBook = NULL;
 	public $fixtures = array('app.ordered_page', 'app.ordered_book', 'app.ordered_mark');
 
-	function startTest() {
+	function start() {
+		parent::start();
 		$this->OrderedPage = ClassRegistry::init('OrderedPage');
 		$this->OrderedMark = ClassRegistry::init('OrderedMark');
 		$this->OrderedBook = ClassRegistry::init('OrderedBook');
 	}	
-	function endTest() {
-		unset($this->OrderedPage);
-		unset($this->OrderedMark);
-		unset($this->OrderedBook);
-		ClassRegistry::flush();
-	}
 	private function findPagesByBook($book_id) {
 		return $this->OrderedPage->find('all', array(
 				'conditions' => array('book_id' => $book_id), 
@@ -43,56 +37,43 @@ class OrderedCase extends CakeTestCase {
 	}
 
 	function testFind() {	
-        $result = $this->OrderedPage->find('first', array('conditions'=>array('book_id'=>1), 'fields' => array('title','weight')));
-        $expected = array('OrderedPage' => array('title' => 'First Page', 'weight' => 1));        
+		$result = $this->OrderedPage->find('first', array('conditions'=>array('book_id'=>1), 'fields' => array('title','weight')));
+		$expected = array('OrderedPage' => array('title' => 'First Page', 'weight' => 1));        
 		$this->assertEqual($result, $expected);  
 		
-        $result = $this->OrderedPage->find('first', array('conditions'=>array('book_id'=>2), 'fields' => array('title','weight')));
-        $expected = array('OrderedPage' => array('title' => 'Front Page', 'weight' => 1));        
+		$result = $this->OrderedPage->find('first', array('conditions'=>array('book_id'=>2), 'fields' => array('title','weight')));
+		$expected = array('OrderedPage' => array('title' => 'Front Page', 'weight' => 1));        
 		$this->assertEqual($result, $expected);  
 		
-		$this->OrderedPage->create();
-		 $this->assertTrue($this->OrderedPage->isFirst(2));  
-		$this->OrderedPage->create();
+		$this->assertTrue($this->OrderedPage->isFirst(2));  
 		$this->assertFalse($this->OrderedPage->isFirst(1));  
-		$this->OrderedPage->create();
-		$this->assertFalse($this->OrderedPage->isFirst(4)); 
-		$this->OrderedPage->create(); 
-		$this->assertFalse($this->OrderedPage->isFirst(5)); 
-		$this->OrderedPage->create(); 
-	 	 $this->assertTrue($this->OrderedPage->isFirst(3)); 
-		$this->OrderedPage->create(); 
+		$this->assertFalse($this->OrderedPage->isFirst(4));  
+		$this->assertFalse($this->OrderedPage->isFirst(5));  
+		$this->assertTrue($this->OrderedPage->isFirst(3));  
 		$this->assertFalse($this->OrderedPage->isFirst(6)); 
 		
-		$this->OrderedPage->create();
 		$this->assertFalse($this->OrderedPage->isLast(2));  
-		$this->OrderedPage->create();
 		$this->assertFalse($this->OrderedPage->isLast(1));  
-		$this->OrderedPage->create();
 		$this->assertFalse($this->OrderedPage->isLast(4));  
-		$this->OrderedPage->create();
-		 $this->assertTrue($this->OrderedPage->isLast(5));  
-		$this->OrderedPage->create();
+		$this->assertTrue($this->OrderedPage->isLast(5));  
 		$this->assertFalse($this->OrderedPage->isLast(3));  
-		$this->OrderedPage->create();
-		 $this->assertTrue($this->OrderedPage->isLast(6));  
+		$this->assertTrue($this->OrderedPage->isLast(6));  
 		 
-		 // No params illegal if not set in id or data
-		$this->OrderedPage->create();
-		 $this->assertFalse($this->OrderedPage->isFirst());  
-		$this->OrderedPage->create();
-		 $this->assertFalse($this->OrderedPage->isLast());  
+		// No params illegal if not set in id or data
+		$this->OrderedPage->id = NULL; $this->OrderedPage->data = NULL;
+		$this->assertFalse($this->OrderedPage->isFirst());  
+		$this->OrderedPage->id = NULL; $this->OrderedPage->data = NULL;
+		$this->assertFalse($this->OrderedPage->isLast());  
 		 
-		 // No params legal if set in properties Id or Data
-		 $this->OrderedPage->id = 2; $this->OrderedPage->data = NULL;
-		 $this->assertTrue($this->OrderedPage->isFirst()); 
-		 $this->OrderedPage->id = NULL; $this->OrderedPage->data = array('OrderedPage' => array('id' => 2));
-		 $this->assertTrue($this->OrderedPage->isFirst());  
-		 $this->OrderedPage->id = 5; $this->OrderedPage->data = NULL;
-		 $this->assertTrue($this->OrderedPage->isLast()); 
-		 $this->OrderedPage->id = NULL; $this->OrderedPage->data = array('OrderedPage' => array('id' => 5));
-		 $this->assertTrue($this->OrderedPage->isLast());  
-		 
+		// No params legal if set in properties Id or Data
+		$this->OrderedPage->id = 2; $this->OrderedPage->data = NULL;
+		$this->assertTrue($this->OrderedPage->isFirst()); 
+		$this->OrderedPage->id = NULL; $this->OrderedPage->data = array('OrderedPage' => array('id' => 2));
+		$this->assertTrue($this->OrderedPage->isFirst());  
+		$this->OrderedPage->id = 5; $this->OrderedPage->data = NULL;
+		$this->assertTrue($this->OrderedPage->isLast()); 
+		$this->OrderedPage->id = NULL; $this->OrderedPage->data = array('OrderedPage' => array('id' => 5));
+		$this->assertTrue($this->OrderedPage->isLast());  	 
 	}
 
 	function testAddPageBook1() {
@@ -111,29 +92,6 @@ class OrderedCase extends CakeTestCase {
 		$expected = array('OrderedPage' => array('id' => $id, 'title'=>'Last Page','book_id'=>2, 'weight' => 3));
 		$this->assertEqual($result, $expected);  
 	}
-
-	function testNeighbors() {
-		$result = $this->OrderedBook->find('neighbors',array(
-			'value' => 3,
-			'field' => 'weight'
-		));
-		$this->assertEqual(sizeof($result),2);
-		$this->assertEqual($result['prev']['OrderedBook'],array('id'=>1,'title'=>'Second Book','weight'=>2));
-		$this->assertEqual($result['next']['OrderedBook'],array('id'=>5,'title'=>'Fourth Book','weight'=>4));
-	}
-	function testNeighbors2() {
-		$this->OrderedBook->id = 4;
-		$result = $this->OrderedBook->neighbors(); // neighbors of book with id 4
-		$this->assertEqual(sizeof($result),2);
-		$this->assertEqual($result['prev']['OrderedBook'],array('id'=>1,'title'=>'Second Book','weight'=>2));
-		$this->assertEqual($result['next']['OrderedBook'],array('id'=>5,'title'=>'Fourth Book','weight'=>4));
-	}
-	function testNeighbors3() {
-		$result = $this->OrderedBook->neighbors(3); // neighbors of book with weight 3
-		$this->assertEqual(sizeof($result),2);
-		$this->assertEqual($result['prev']['OrderedBook'],array('id'=>1,'title'=>'Second Book','weight'=>2));
-		$this->assertEqual($result['next']['OrderedBook'],array('id'=>5,'title'=>'Fourth Book','weight'=>4));
-	}	
 
 	function testMoveThirdPageUp() {
 		$this->OrderedPage->moveUp(4);
@@ -286,30 +244,18 @@ class OrderedCase extends CakeTestCase {
         $expected = array('OrderedMark' => array('title' => 'First Mark', 'nose' => 1));        
 		$this->assertEqual($result, $expected);  
 		
-		$this->OrderedMark->create();
-		$this->assertFalse($this->OrderedMark->isLast(1)); 
-		$this->OrderedMark->create(); 
+		$this->assertFalse($this->OrderedMark->isLast(1));  
 		$this->assertFalse($this->OrderedMark->isLast(2));  
-		$this->OrderedMark->create();
 		$this->assertFalse($this->OrderedMark->isLast(3));  
-		$this->OrderedMark->create();
 	 	 $this->assertTrue($this->OrderedMark->isLast(4));  
-		$this->OrderedMark->create();
-		$this->assertFalse($this->OrderedMark->isLast(5)); 
-		$this->OrderedMark->create(); 
+		$this->assertFalse($this->OrderedMark->isLast(5));  
 	  	 $this->assertTrue($this->OrderedMark->isLast(6));  
 		
-		$this->OrderedMark->create();
 		 $this->assertTrue($this->OrderedMark->isFirst(1));  
-		$this->OrderedMark->create();
 		$this->assertFalse($this->OrderedMark->isFirst(2));  
-		$this->OrderedMark->create();
 		$this->assertFalse($this->OrderedMark->isFirst(3));  
-		$this->OrderedMark->create();
 		$this->assertFalse($this->OrderedMark->isFirst(4));  
-		$this->OrderedMark->create();
 		 $this->assertTrue($this->OrderedMark->isFirst(5));  
-		$this->OrderedMark->create();
 		$this->assertFalse($this->OrderedMark->isFirst(6));  
 	}
 
@@ -616,17 +562,6 @@ class OrderedCase extends CakeTestCase {
 		$this->assertEqual($result, $expected, 'ResetWeights : %s'); 		
 	}
 	
-	function testResetWeightsMark() {
-		$this->OrderedBook->resetweights();
-		$result = $this->OrderedBook->find('all');
-		$this->assertEqual($result[0]['OrderedBook']['title'],'Fifth Book');
-		$this->assertEqual($result[1]['OrderedBook']['title'],'First Book');
-		$this->assertEqual($result[2]['OrderedBook']['title'],'Fourth Book');
-		$this->assertEqual($result[3]['OrderedBook']['title'],'Second Book');
-		$this->assertEqual($result[4]['OrderedBook']['title'],'Sixth Book');
-		$this->assertEqual($result[5]['OrderedBook']['title'],'Third Book');
-	}
-	
 	function testWithSoftDelete() { 
 		$this->OrderedMark->Behaviors->attach('SoftDeletable');
 		$result = $this->OrderedMark->find('all', array('conditions'=>array('order_id'=>1), 'fields' => array('id','nose','deleted')));
@@ -723,21 +658,58 @@ class OrderedCase extends CakeTestCase {
 		$this->OrderedMark->Behaviors->detach('SoftDeletable');
 	}
 	
-	function testCustomNewWeightFirst() {
-		$this->OrderedMark->create(array('OrderedMark'=>array(
-			'title' => 'Haha', 'order_id' => 1
-		)));
-		$this->OrderedMark->save();
-		$this->OrderedMark->moveTo($this->OrderedMark->id,1);
-		$result = $this->OrderedMark->find('all',array(
-			'conditions' => array('order_id' => 1),
-			'fields'=>array('id','nose','title')));
-		$this->assertEqual($result[0]['OrderedMark']['nose'],1);
-		$this->assertEqual($result[0]['OrderedMark']['title'],'Haha');
-		$this->assertEqual($result[4]['OrderedMark']['nose'],5);
-		$this->assertEqual($result[4]['OrderedMark']['title'],'Fourth Mark');
-	}	
-
-/**/
+	function testBookDelete() {
+		$result = $this->OrderedBook->find('list', array('fields'=>array('title','weight')));
+		$expected = array(
+			'First Book' => 1,
+		    'Second Book' => 2,
+		    'Third Book' => 3,
+		    'Fourth Book' => 4,
+		    'Fifth Book' => 5,
+		    'Sixth Book' => 6
+		);
+		$this->assertEqual($expected,$result);
+		
+		$this->assertTrue($this->OrderedBook->delete(4));
+		
+		$result = $this->OrderedBook->find('list', array('fields'=>array('title','weight')));
+		$expected = array(
+			'First Book' => 1,
+		    'Second Book' => 2,
+		    'Fourth Book' => 3,
+		    'Fifth Book' => 4,
+		    'Sixth Book' => 5
+		);
+		$this->assertEqual($expected,$result);
+	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ?>
