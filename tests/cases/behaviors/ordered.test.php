@@ -681,6 +681,31 @@ class OrderedCase extends CakeTestCase {
 		    'Sixth Book' => 5
 		);
 		$this->assertEqual($expected,$result);
+	}	
+	
+	function testPageDelete() {
+		$result = $this->OrderedPage->find('list', array(
+      'conditions' => array('book_id' => 1),
+      'fields'=>array('title','weight')));
+		$expected = array(
+			'First Page' => 1,
+		    'Second Page' => 2,
+		    'Third Page' => 3,
+		    'Fourth Page' => 4,
+		);
+		$this->assertEqual($expected,$result);
+		
+		$this->assertTrue($this->OrderedPage->delete(4));
+		
+		$result = $this->OrderedPage->find('list', array(
+      'conditions' => array('book_id' => 1),
+      'fields'=>array('title','weight')));
+		$expected = array(
+			'First Page' => 1,
+		    'Second Page' => 2,
+		    'Fourth Page' => 3,
+		);
+		$this->assertEqual($expected,$result);
 	}
 }
 
