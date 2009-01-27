@@ -25,7 +25,7 @@ class Log extends CakeTestModel {
 
 class LogableUser extends CakeTestModel {
 	var $name = 'LogableUser';
-	var $actsAs = array('Logable' => array('userModel'=>'LogableUser'));
+	var $actsAs = array('Logable' => array('userModel'=>'LogableUser','ignore'=>array('counter')));
 }
 
 class LogableComment extends CakeTestModel {
@@ -38,15 +38,20 @@ class LogableCase extends CakeTestCase {
     var $Log = NULL;
 	var $fixtures = array('app.logable_log', 'app.logable_book', 'app.logable_user', 'app.logable_comment');
 
-	function start() {
-		parent::start();
-		
+	function startTest() {		
 		$this->LogableBook = ClassRegistry::init('LogableBook');
 		$this->Log = ClassRegistry::init('Log');
 		$this->LogableUser = ClassRegistry::init('LogableUser');
 		$this->LogableComment = ClassRegistry::init('LogableComment');
 		 // Configure::write('debug',2);
 	}	
+	function endTest() {
+		unset($this->LogableBook);
+		unset($this->Log);
+		unset($this->LogableUser);
+		unset($this->LogableComment);
+		ClassRegistry::flush();
+	}
 	
 	function testFindLog() {
 		// no params should give all log items of current model
@@ -615,7 +620,7 @@ class LogableCase extends CakeTestCase {
 	    	'Log' => array(
 	            'id' => 6,
 	            'title' => 'LogableComment (1)',
-	            'description' => 'LogableComment updated by LogableUser "Alexander".',
+	            'description' => 'LogableComment (1) updated by LogableUser "Alexander" (66).',
 	            'model' => 'LogableComment',
 	            'model_id' => 1,
 	            'action' => 'edit',
@@ -625,31 +630,21 @@ class LogableCase extends CakeTestCase {
 		);
 		$this->assertEqual($expected,$result);		
 	}
-	
-	function testCustomLog() {
-		$this->LogableBook->setUserData(array('LogableUser'=>array('id'=>66,'name'=>'Alexander')));
-		$this->LogableBook->customLog(
-			'custom event',
-			1,
-			array(
-				'description' => 'Book custom event'
-			)
-		);
-		$result = $this->Log->find('first');
-		$expected = array(
-	    	'Log' => array(
-	            'id' => 6,
-	            'title' => 'Fourth Book',
-	            'model' => 'LogableBook',
-	            'model_id' => 1,
-	            'action' => 'custom event',
-	            'user_id' => 66,
-	            'change' => null,
-	            'description' => 'Book custom event by LogableUser "Alexander" (66).',
-	        )		
-		);
-		$this->assertEqual($expected,$result);
-	}
 
+	function testIgnoreSetup() {
+		$log_rows_before = $this->Log->find('count', array('conditions' => array('model' => 'LogableUser','model_id' => 301)));		
+		$this->LogableUser->save(array('id'=>301, 'counter' => 3));
+		$log_rows_after = $this->Log->find('count', array('conditions' => array('model' => 'LogableUser','model_id' => 301)));	
+		$this->assertEqual($log_rows_after, $log_rows_before);
+			
+		$this->LogableUser->save(array('id'=>301,'name' => 'Steven Segal', 'counter' => 77));
+		
+		$result = $this->Log->find('first', array(
+			'order' => 'Log.id DESC',
+			'conditions' => array('model' => 'LogableUser','model_id' => 301)));
+		$this->assertEqual($result['Log']['change'],'name');
+	}
+	
+	
 }
 ?>

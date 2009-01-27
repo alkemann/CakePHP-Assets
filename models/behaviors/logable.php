@@ -383,7 +383,9 @@ class LogableBehavior extends ModelBehavior
     			} else {
     				$old = '';
     			}
-    			if ($key != 'modified' && $value != $old && in_array($key,$db_fields) ) {
+    			if ($key != 'modified' 
+    			&& !in_array($key, $this->settings[$Model->alias]['ignore'])
+    			&& $value != $old && in_array($key,$db_fields) ) {
     				if ($this->settings[$Model->alias]['change'] == 'full') {
     					$logData['Log']['change'] .= $key . ' ('.$old.') => ('.$value.'), ';
     				} else {
