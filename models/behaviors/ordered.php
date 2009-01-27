@@ -1,6 +1,6 @@
 <?php
 /**
- * OrderedBehavior 2.2
+ * OrderedBehavior 2.2.1
  *
  *
  * This behavior lets you order items in a very similar way to the tree
@@ -93,8 +93,8 @@
  * 
  * @author Alexander Morland aka alkemann
  * @license MIT
- * @version 2.2
- * @modified 19. jan 2009
+ * @version 2.2.1
+ * @modified 26. jan 2009
  * 
  */
 class OrderedBehavior extends ModelBehavior {
@@ -535,7 +535,7 @@ class OrderedBehavior extends ModelBehavior {
 			$old_weight = $Model->data[$Model->alias][$this->settings[$Model->alias]['field']];
 			// update the weight of all models of higher weight by			
 
-			$action = array($this->settings[$Model->alias]['field'] => $this->settings[$Model->alias]['field'] . ' - 1');
+			$action = array($this->settings[$Model->alias]['field'] => $Model->alias.'.'.$this->settings[$Model->alias]['field'] . ' - 1');
 			$conditions = array(
 					$Model->alias . '.' . $this->settings[$Model->alias]['field'] . ' >' => $old_weight);
 			if ($this->settings[$Model->alias]['foreign_key']) {
