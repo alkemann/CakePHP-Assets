@@ -55,8 +55,8 @@
  * @co-author Ronny Vindenes
  * @co-author Carl Erik Fyllingen
  * @category Behavior
- * @version 2.0
- * @modified 15.jan 2008 by alexander
+ * @version 2.1
+ * @modified 27.jan 2008 by alexander
  */
 
 class LogableBehavior extends ModelBehavior 
