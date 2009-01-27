@@ -377,6 +377,7 @@ class LogableBehavior extends ModelBehavior
     	if (isset($this->Log->_schema['change'])) {
     		$logData['Log']['change'] = '';
     		$db_fields = array_keys($Model->_schema);
+    		$changed_fields = array();
     		foreach ($Model->data[$Model->alias] as $key => $value) {
     			if (isset($Model->data[$Model->alias][$Model->primaryKey]) && !empty($this->old) && isset($this->old[$Model->alias][$key])) {
     				$old = $this->old[$Model->alias][$key];
@@ -384,20 +385,22 @@ class LogableBehavior extends ModelBehavior
     				$old = '';
     			}
     			if ($key != 'modified' 
-    			&& !in_array($key, $this->settings[$Model->alias]['ignore'])
-    			&& $value != $old && in_array($key,$db_fields) ) {
-    				if ($this->settings[$Model->alias]['change'] == 'full') {
-    					$logData['Log']['change'] .= $key . ' ('.$old.') => ('.$value.'), ';
-    				} else {
-    					$logData['Log']['change'] .= $key . ', ';	
-    				}    				
-    			}
+	    			&& !in_array($key, $this->settings[$Model->alias]['ignore'])
+	    			&& $value != $old && in_array($key,$db_fields) ) 
+	    			{
+	    				if ($this->settings[$Model->alias]['change'] == 'full') {
+	    					$changed_fields[] = $key . ' ('.$old.') => ('.$value.')';
+	    				} else {
+	    					$changed_fields[] = $key;	
+	    				}    				
+	    			}
     		}
-    		if (strlen($logData['Log']['change'])) {
-    			$logData['Log']['change'] = substr($logData['Log']['change'],0,-2);
-    		} else {
+    		$changes = sizeof($changed_fields);
+    		if ($changed_fields == 0) {
     			return true;
-    		}    		
+    		} 
+    		$logData['Log']['change'] = implode(', ',$changed_fields);
+    		$logData['Log']['changes'] = $changes;		
     	}  
     	$this->_saveLog($Model, $logData);
     }
