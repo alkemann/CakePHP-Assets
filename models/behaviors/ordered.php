@@ -646,7 +646,7 @@ class OrderedBehavior extends ModelBehavior {
 		if ( $this->settings[$Model->alias]['foreign_key'] && !$foreignKey ) {			
 			return false;
 		}
-		$highest = $this->_highest($Model);
+		$highest = $this->_highest($Model, $foreignKey);
 		return $highest[$Model->alias][$this->settings[$Model->alias]['field']] + 1;		
 	}	
 		
