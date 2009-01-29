@@ -1,6 +1,6 @@
 <?php
 /**
- * OrderedBehavior 2.2.1
+ * OrderedBehavior 2.2.2
  *
  *
  * This behavior lets you order items in a very similar way to the tree
@@ -93,8 +93,8 @@
  * 
  * @author Alexander Morland aka alkemann
  * @license MIT
- * @version 2.2.1
- * @modified 26. jan 2009
+ * @version 2.2.2
+ * @modified 29. jan 2009
  * 
  */
 class OrderedBehavior extends ModelBehavior {
