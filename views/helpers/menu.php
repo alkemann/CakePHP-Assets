@@ -47,6 +47,7 @@
  *         and
  *    add a ) to the end.
  * 4. Remove the div, ul and li parts that surrounded these links.
+ * 5. Add this css rule ul.menu_context li { list-style: none; }
  * 
  * Now all these links that used to be echoed in the view, will be printed as a ul on top of the layout.
  *
@@ -83,7 +84,10 @@
  * 
  * Customizations : 
  * 
- * 
+ * If you wish to style the menus, take a look at the generated source code, each UL level
+ * is given a unique class based on the target name. If you have need of more fine control,
+ * you can use the $options paramter of the helpers methods to use image icons, class on
+ * the A tags, id, class or style LI, UL and DIVs. See each method for specifics.
  *  
  * @author Ronny Vindenes
  * @author Alexander Morland
@@ -103,8 +107,6 @@ class MenuHelper extends AppHelper {
 	 * 
 	 * @param mixed $target String or Array target notations
 	 * @param array $link Array in same format as used by HtmlHelper::link()
-	 * @param array $htmlAttributes
-	 * 
 	 * @param array $options
 	 *  @options 'icon'  > $html->image() params
 	 *  @options 'class' > <a class="?">
@@ -163,7 +165,6 @@ class MenuHelper extends AppHelper {
 	 *
 	 * @param mixed $target String or Array target notations
 	 * @param string $element Any string
-	 * 
 	 * @param array $options
 	 *  @options 'li'    > string:class || array('id','class','style')
 	 *  @options 'div'	 > string:class || boolean:use || array('id','class','style') 
@@ -203,7 +204,6 @@ class MenuHelper extends AppHelper {
 	 * Renders and returns the generated html for the targeted item and its element and children
 	 *
 	 * @param mixed $source String or Array target notations
-	 * 
 	 * @param array $options
 	 *  @options 'style' > string:predefined style name || boolean:use
 	 *  @options 'class' > <ul class="?"><li><ul>..</li></ul>
