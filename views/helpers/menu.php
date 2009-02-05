@@ -1,8 +1,8 @@
 <?php
 /** MenuHelper 1.0.1
  *
- * The purpose of this helper is to generate menus and other lists of links. The dynimc api
- * lets you build any amount of multileveled "menus". Created for the purpose of main, sub and
+ * The purpose of this helper is to generate menus and other lists of links. The dynamic api
+ * lets you build any amount of multi level "menus". Created for the purpose of main, sub and
  * context sensitive menues, this helper can also be used as an html UL generator.
  * 
  * Installation and requirements:
@@ -210,7 +210,9 @@ class MenuHelper extends AppHelper {
 	 *  @options 'id' 	 > <ul id="?"><li><ul>..</li></ul>
 	 *  @options 'ul'    > string:class || array('class','style')
 	 *  @options 'div'	 > string:class || boolean:use || array('id','class','style') 
+	 *  @options 'active'> array('tag' => string(span,strong,etc), 'attributes' => array(htmlAttributes)) 
 	 *
+	 * @example echo $menu->generate('context', array('active' => array('tag' => 'a','attributes' => array('style' => 'color:red;','id'=>'current'))));
 	 * @return mixed string generated html or false if target doesnt exist
 	 */
 	function generate($source = 'main', $options = array()) {
@@ -256,6 +258,10 @@ class MenuHelper extends AppHelper {
 			}
 			$menu = &$this->items[$source];
 		}
+		if (isset($options['active'])) {
+			$defaults = array( 'tag' => 'span', 'attributes' =>  array('class' => 'active'));
+			$options['active'] = array_merge($defaults, $options['active']);
+		}
 		
 		/* Generate menu items */
 		foreach ($menu as $key => $item) {
@@ -284,7 +290,23 @@ class MenuHelper extends AppHelper {
 				if (!isset($item[0][2]['title'])) {
 					$item[0][2]['title'] = $item[0][0];
 				}
-				$listitem = $this->Html->link($item[0][0], $item[0][1], $item[0][2], $item[0][3], $item[0][4]);
+				$active = ($this->here == $this->url($item[0][1]));
+				if ( $active && isset($options['active'])) {	
+					$listitem = $this->Html->tag($options['active']['tag'], $item[0][0], $options['active']['attributes']);					
+				} else {
+					if ($active) {
+						if (is_array($item[0][2])) {
+							if (isset($item[0][2]['class'])) {
+								$item[0][2]['class'] .= ' active';
+							} else {
+								$item[0][2]['class'] = 'active';
+							}
+						} else {
+							$item[0][2] = array('class' => 'active');
+						}
+					}
+					$listitem = $this->Html->link($item[0][0], $item[0][1], $item[0][2], $item[0][3], $item[0][4]);
+				}
 			} elseif (isset($item[2])) {
 				$listitem = $item[2];
 			} else {
@@ -311,7 +333,6 @@ class MenuHelper extends AppHelper {
 			}
 			$out = $this->Html->tag('div', $out, $options['div']);
 		}
-		
 		return $out;
 	}
 
