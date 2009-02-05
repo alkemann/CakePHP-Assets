@@ -1,5 +1,5 @@
 <?php
-/** MenuHelper 1.0.1
+/** MenuHelper 1.1
  *
  * The purpose of this helper is to generate menus and other lists of links. The dynamic api
  * lets you build any amount of multi level "menus". Created for the purpose of main, sub and
@@ -92,8 +92,8 @@
  * @author Ronny Vindenes
  * @author Alexander Morland
  * @license MIT
- * @modified 2.feb 2009
- * @version 1.0.1
+ * @modified 5.feb 2009
+ * @version 1.1
  */
 class MenuHelper extends AppHelper {
 	
