@@ -1155,6 +1155,41 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertNoErrors('3 tags : %s');
 	}	
 
+	function testRevertTo2() {
+		$this->loadFixtures(
+			'RevisionComment','RevisionCommentsRev',
+			'RevisionCommentsRevisionTag','RevisionCommentsRevisionTagsRev',
+			'RevisionTag','RevisionTagsRev'
+		);
+		$this->Comment->bindModel(array('hasAndBelongsToMany' => array(
+				'Tag' => array(
+					'className' => 'RevisionTag'
+				)
+			)
+		),false);
+		
+		$comment_one = $this->Comment->find('first', array('conditions'=>array('Comment.id'=>1),'contain'=>'Tag'));
+		$this->assertEqual($comment_one['Comment']['title'],'Comment 1');
+		$this->assertEqual(Set::extract($comment_one,'Tag.{n}.id') , array(1,2,3));
+		$this->Comment->id = 1;
+		$rev_one = $this->Comment->newest();
+		$this->assertEqual($rev_one['Comment']['title'],'Comment 1');
+		$this->assertEqual($rev_one['Comment']['Tag'], '1,2,3');
+		
+		$this->Comment->create(array('Comment'=>array('id'=>1,'title'=>'Edited')));
+		$this->Comment->save();
+		
+		$comment_one = $this->Comment->find('first', array('conditions'=>array('Comment.id'=>1),'contain'=>'Tag'));
+		$this->assertEqual($comment_one['Comment']['title'],'Edited');
+		$result = Set::extract($comment_one,'Tag.{n}.id');
+		$expected = array(1,2,3);
+		$this->assertEqual($result,$expected);
+		$this->Comment->id = 1;
+		$rev_one = $this->Comment->newest();
+		$this->assertEqual($rev_one['Comment']['title'],'Edited');
+		$this->assertEqual($rev_one['Comment']['Tag'], '1,2,3');
+	}
+
 	function testHabtmRevRevertToDate() {
 		$this->loadFixtures(
 			'RevisionComment','RevisionCommentsRev',
