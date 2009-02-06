@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 2.0.2
+ * Revision Behavior 2.0.3
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -95,8 +95,8 @@
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 23. january 2009
- * @version 2.0.2
+ * @modifed 6. feb 2009
+ * @version 2.0.3
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -847,16 +847,18 @@ class RevisionBehavior extends ModelBehavior {
 	   				continue;
 	   			}				
 	   			$oldIds = Set::extract($this->oldData[$Model->alias],$assocAlias.'.{n}.id');
-				if (!isset($Model->data[$assocAlias])) {					
-					$Model->ShadowModel->set($assocAlias, implode(',',$oldIds));
-					continue;
-				}
-				$currentIds = Set::extract($data,$assocAlias.'.{n}.id');
-				$id_changes = array_diff($currentIds,$oldIds);
-				if (!empty($id_changes)) {
-					$Model->ShadowModel->set($assocAlias, implode(',',$currentIds));
-					$changeDetected = true;
-				}
+          if (!isset($Model->data[$assocAlias])) {					
+            $Model->ShadowModel->set($assocAlias, implode(',',$oldIds));
+            continue;
+          }
+          $currentIds = Set::extract($data,$assocAlias.'.{n}.id');
+          $id_changes = array_diff($currentIds,$oldIds);
+          if (!empty($id_changes)) {
+            $Model->ShadowModel->set($assocAlias, implode(',',$currentIds));
+            $changeDetected = true;
+          } else {
+            $Model->ShadowModel->set($assocAlias, implode(',',$oldIds));
+          }
 	   		}   			
    		}
    		unset($this->oldData[$Model->alias]); 		
