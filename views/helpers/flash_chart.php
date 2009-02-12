@@ -1,5 +1,5 @@
 <?php
-/** Charts in a flash! - FlashChartHelper version 3.3.3
+/** Charts in a flash! - FlashChartHelper version 3.3.4
  * 
  * The sole purpose of this helper is to integrate OpenFlashChart2 (http://teethgrinder.co.uk/open-flash-chart-2)
  * with cake in an easy to use way. It is based on the work of Joaquin Windmuller and his article on the bakery
