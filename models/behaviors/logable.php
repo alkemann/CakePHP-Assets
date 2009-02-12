@@ -56,7 +56,7 @@
  * @co-author Carl Erik Fyllingen
  * @category Behavior
  * @version 2.1
- * @modified 27.jan 2008 by alexander
+ * @modified 12.feb 2009 by ronny
  */
 
 class LogableBehavior extends ModelBehavior 
@@ -88,7 +88,8 @@ class LogableBehavior extends ModelBehavior
 		if (!is_array($config)) {
 			$config = array();
 		}	
-		$this->settings[$Model->alias] = array_merge($this->defaults, $config);
+		$this->settings[$Model->alias] = array_merge_recursive($this->defaults, $config);
+		$this->settings[$Model->alias]['ignore'] = (array) $this->settings[$Model->alias]['ignore'];
 		$this->settings[$Model->alias]['ignore'][] = $Model->primaryKey; 
 				
 		App::import('model','Log');
