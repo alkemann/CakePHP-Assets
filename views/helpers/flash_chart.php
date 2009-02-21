@@ -1,5 +1,5 @@
 <?php
-/** Charts in a flash! - FlashChartHelper version 3.3.5
+/** Charts in a flash! - FlashChartHelper version 3.3.6
  * 
  * The sole purpose of this helper is to integrate OpenFlashChart2 (http://teethgrinder.co.uk/open-flash-chart-2)
  * with cake in an easy to use way. It is based on the work of Joaquin Windmuller and his article on the bakery
@@ -212,13 +212,14 @@
  * 
  * 
  * @author Alexander Morland aka 'alkemann' 
- * @author Eskil Mjelvaa Saadtvedt
  * @author Ronny Vindenes
- * @author Carl Erik Fyllingen
+ * @contributor Eskil Mjelvaa Saadtvedt
+ * @contributor Carl Erik Fyllingen
+ * @contributor Korcan
  * @modified 20 feb. 2009 by Alexander
  * @category Cake Helper
  * @license MIT
- * @version 3.3.5
+ * @version 3.3.6
  * 
  **/
 App::import('Vendor', 'flashchart/open-flash-chart');
@@ -506,6 +507,17 @@ class FlashChartHelper extends AppHelper {
 			}
 			$bar_stack->append_stack($tmp);
 		}
+    if (!empty($this->tooltip) ) {
+      $element->set_tooltip($this->tooltip);
+    }
+		foreach ($options as $key => $setting) {
+			$set_method = 'set_' . $key;
+			if (is_array($setting)) {
+				$bar_stack->$set_method($setting[0], $setting[1]);
+			} else {
+				$bar_stack->$set_method($setting);
+			}			
+		}		
 		$this->Chart->set_bg_colour($this->bg_colour);
 		$this->Chart->add_element($bar_stack);
 		return $this->renderData($chartId);
@@ -538,11 +550,13 @@ class FlashChartHelper extends AppHelper {
 		foreach ($this->data[$datasetName] as $row) {
 			$values[] = new scatter_value($row[$options['x_key']], $row[$options['y_key']]);
 		}
+    if (!empty($this->tooltip) ) {
+      $element->set_tooltip($this->tooltip);
+    }
 		$scatter->set_values($values);
 		$this->Chart->add_element($scatter);
 		$this->Chart->set_bg_colour($this->bg_colour);
-		return $this->renderData($chartId);
-	
+		return $this->renderData($chartId);	
 	}
 	
 	/**
