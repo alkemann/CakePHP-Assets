@@ -1,5 +1,5 @@
 <?php
-/** Charts in a flash! - FlashChartHelper version 3.3.6
+/** Charts in a flash! - FlashChartHelper version 3.3.7
  * 
  * The sole purpose of this helper is to integrate OpenFlashChart2 (http://teethgrinder.co.uk/open-flash-chart-2)
  * with cake in an easy to use way. It is based on the work of Joaquin Windmuller and his article on the bakery
@@ -216,10 +216,10 @@
  * @contributor Eskil Mjelvaa Saadtvedt
  * @contributor Carl Erik Fyllingen
  * @contributor Korcan
- * @modified 20 feb. 2009 by Alexander
+ * @modified 25 feb. 2009 by Alexander
  * @category Cake Helper
  * @license MIT
- * @version 3.3.6
+ * @version 3.3.7
  * 
  **/
 App::import('Vendor', 'flashchart/open-flash-chart');
@@ -346,10 +346,10 @@ class FlashChartHelper extends AppHelper {
 	 * @return string flashHelper flash embed output
 	 */
 	public function render($width = null, $height = null, $chartId = 'default', $domId = false) {
-		if (is_numeric($width)) {
+		if (!is_null($width)) {
 			$this->settings['width'] = $width;
 		}
-		if (is_numeric($height)) {
+		if (!is_null($height)) {
 			$this->settings['height'] = $height;
 		}
 		$this->Chart = new open_flash_chart();
