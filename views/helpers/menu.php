@@ -1,5 +1,5 @@
 <?php
-/** MenuHelper 1.1
+/** MenuHelper 1.2
  *
  * The purpose of this helper is to generate menus and other lists of links. The dynamic api
  * lets you build any amount of multi level "menus". Created for the purpose of main, sub and
@@ -92,8 +92,8 @@
  * @author Ronny Vindenes
  * @author Alexander Morland
  * @license MIT
- * @modified 5.feb 2009
- * @version 1.1
+ * @modified 6.mar 2009
+ * @version 1.2
  */
 class MenuHelper extends AppHelper {
 	
@@ -210,7 +210,7 @@ class MenuHelper extends AppHelper {
 	 *  @options 'id' 	 > <ul id="?"><li><ul>..</li></ul>
 	 *  @options 'ul'    > string:class || array('class','style')
 	 *  @options 'div'	 > string:class || boolean:use || array('id','class','style') 
-	 *  @options 'active'> array('tag' => string(span,strong,etc), 'attributes' => array(htmlAttributes)) 
+	 *  @options 'active'> array('tag' => string(span,strong,etc), 'attributes' => array(htmlAttributes), 'strict' => boolean(true|false)))
 	 *
 	 * @example echo $menu->generate('context', array('active' => array('tag' => 'a','attributes' => array('style' => 'color:red;','id'=>'current'))));
 	 * @return mixed string generated html or false if target doesnt exist
@@ -259,7 +259,7 @@ class MenuHelper extends AppHelper {
 			$menu = &$this->items[$source];
 		}
 		if (isset($options['active'])) {
-			$defaults = array( 'tag' => 'span', 'attributes' =>  array('class' => 'active'));
+			$defaults = array( 'tag' => 'span', 'attributes' =>  array('class' => 'active'), 'strict' => true);
 			$options['active'] = array_merge($defaults, $options['active']);
 		}
 		
@@ -290,7 +290,13 @@ class MenuHelper extends AppHelper {
 				if (!isset($item[0][2]['title'])) {
 					$item[0][2]['title'] = $item[0][0];
 				}
-				$active = ($this->here == $this->url($item[0][1]));
+				if (isset($options['active']['strict']) && !$options['active']['strict']) {
+					$here = $this->url(array('controller' => $this->params['controller'], 'action' => $this->params['action']));
+				} else {
+					$here = $this->here;
+				}
+
+				$active = ($here == $this->url($item[0][1]));
 				if ( $active && isset($options['active'])) {	
 					$listitem = $this->Html->tag($options['active']['tag'], $item[0][0], $options['active']['attributes']);					
 				} else {
