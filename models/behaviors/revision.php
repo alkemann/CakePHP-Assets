@@ -244,9 +244,9 @@ class RevisionBehavior extends ModelBehavior {
 		$keys = array_keys($all[0][$Model->alias]);
 		foreach ($keys as $field) {
 			$all_values = Set::extract($all,'/'.$Model->alias.'/'.$field);
-			$all_values = array_unique($all_values);
+			$all_values = array_reverse(array_unique(array_reverse($all_values,true)),true);
 			if (sizeof($all_values) == 1) {
-				$unified[$field] = $all_values[0];
+				$unified[$field] = reset($all_values);
 			} else {
 				$unified[$field] = $all_values;
 			}			
@@ -826,7 +826,7 @@ class RevisionBehavior extends ModelBehavior {
 	       		'contain'=> $habtm,
 	       		'conditions'=>array($Model->alias.'.'.$Model->primaryKey => $Model->id)));
 
-		$changeDetected = false;
+        $changeDetected = false;
 		foreach ($data[$Model->alias] as $key => $value) {
    			if ( isset($data[$Model->alias][$Model->primaryKey]) 
    					&& !empty($this->oldData[$Model->alias]) 

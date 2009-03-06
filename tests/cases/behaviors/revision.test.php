@@ -360,6 +360,35 @@ class RevisionTestCase extends CakeTestCase {
 		);
 		$this->assertEqual($expected, $result);
 	}
+    	function testDiffMultipleFields() {
+		$this->loadFixtures('RevisionPost','RevisionPostsRev');
+
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited title 1'));
+		$this->Post->save($data);
+		$data = array('Post' => array('id'=>1, 'content' => 'Edited content'));
+		$this->Post->save($data);
+		$data = array('Post' => array('id'=>1, 'title' => 'Edited title 2'));
+		$this->Post->save($data);
+
+		$this->Post->id = 1;
+		$result = $this->Post->diff(null,null,array('fields'=>array('version_id','id', 'title', 'content')));
+		$expected = array(
+			'Post' => array(
+				'version_id' => array(6,5,4,1),
+				'id' => 1,
+				'title' => array(
+					0 => 'Edited title 2',
+					2 => 'Edited title 1',
+					3 => 'Lorem ipsum dolor sit amet'
+				),
+				'content' => array(
+                        1 => 'Edited content',
+                        3 => 'Lorem ipsum dolor sit amet, aliquet feugiat.'
+                )
+			)
+		);
+		$this->assertEqual($expected, $result);
+	}
 
 	function testPrevious() {		
 		$this->loadFixtures('RevisionPost','RevisionPostsRev');
@@ -1387,6 +1416,5 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertFalse($this->User->updateRevisions());
 		$this->assertError();
 	}
-/* */
 }
 ?>
