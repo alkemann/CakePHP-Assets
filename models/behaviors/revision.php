@@ -953,10 +953,14 @@ class RevisionBehavior extends ModelBehavior {
 		} else {
 			$dbConfig = $this->settings[$Model->alias]['useDbConfig'];			
 		}
-		$db = & ConnectionManager::getDataSource($dbConfig);	
-		$shadow_table = $Model->useTable .$this->revision_suffix;	
+		$db = & ConnectionManager::getDataSource($dbConfig);
+		if ($Model->useTable) {
+		  $shadow_table = $Model->useTable;	
+		} else {
+		  $shadow_table = Inflector::tableize($Model->name);
+		}
 		$prefix = $Model->tablePrefix ? $Model->tablePrefix : $db->config['prefix'];
-		$full_table_name = $prefix.$shadow_table;
+		$full_table_name = $prefix.$shadow_table.$this->revision_suffix;
 	
 		$existing_tables = $db->listSources();
 		if (!in_array($full_table_name, $existing_tables)) {
