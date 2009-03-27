@@ -1,6 +1,6 @@
 <?php
 /**
- * Revision Behavior 2.0.3
+ * Revision Behavior 2.0.4
  * 
  * Revision is a solution for adding undo and other versioning functionality
  * to your database models. It is set up to be easy to apply to your project,
@@ -95,8 +95,8 @@
  * @author Ronny Vindenes
  * @author Alexander 'alkemann' Morland
  * @license MIT
- * @modifed 6. feb 2009
- * @version 2.0.3
+ * @modifed 27. march 2009
+ * @version 2.0.4
  */
 class RevisionBehavior extends ModelBehavior {
 
@@ -959,28 +959,24 @@ class RevisionBehavior extends ModelBehavior {
 		} else {
 		  $shadow_table = Inflector::tableize($Model->name);
 		}
+		$shadow_table = $shadow_table . $this->revision_suffix;
 		$prefix = $Model->tablePrefix ? $Model->tablePrefix : $db->config['prefix'];
-		$full_table_name = $prefix.$shadow_table.$this->revision_suffix;
+		$full_table_name = $prefix . $shadow_table;
 	
 		$existing_tables = $db->listSources();
 		if (!in_array($full_table_name, $existing_tables)) {
             $Model->ShadowModel = false;
             return false;
-		}
-		/* Use the full table name if the prefix came from the model */	
-        if ($prefix && empty($db->config['prefix'])) {
-            $shadow_table = $full_table_name;
-        }
-        
-		if (is_string($this->settings[$Model->alias]['model'])) {
-			if (App::import('model',$this->settings[$Model->alias]['model'])) {
-				$Model->ShadowModel = new $this->settings[$Model->alias]['model'](false, $shadow_table, $dbConfig);
-			} else {
-				$Model->ShadowModel = new Model(false, $shadow_table, $dbConfig);
-			}			
-		} else {
-			$Model->ShadowModel = new Model(false, $shadow_table, $dbConfig);
-		}			
+		}  
+    $useShadowModel = $this->settings[$Model->alias]['model'];
+		if (is_string($useShadowModel) && App::import('model',$useShadowModel)) {
+      $Model->ShadowModel = new $useShadowModel(false, $shadow_table, $dbConfig);
+    } else {
+      $Model->ShadowModel = new Model(false, $shadow_table, $dbConfig);
+    }			
+    if ($Model->tablePrefix) {
+      $Model->ShadowModel->tablePrefix = $Model->tablePrefix;
+    }
 		$Model->ShadowModel->alias = $Model->alias;
 		$Model->ShadowModel->primaryKey = 'version_id';
 		$Model->ShadowModel->order = 'version_created DESC, version_id DESC';
