@@ -1,5 +1,5 @@
 <?php
-/** Charts in a flash! - FlashChartHelper version 3.3.8
+/** Charts in a flash! - FlashChartHelper version 3.3.91
  * 
  * The sole purpose of this helper is to integrate OpenFlashChart2 (http://teethgrinder.co.uk/open-flash-chart-2)
  * with cake in an easy to use way. It is based on the work of Joaquin Windmuller and his article on the bakery
@@ -217,9 +217,10 @@
  * @contributor Carl Erik Fyllingen
  * @contributor Korcan
  * @modified 23 april 2009 by jelle.henkens
+ * @modified 22 may 2009 deca.rox
  * @category Cake Helper
  * @license MIT
- * @version 3.3.9
+ * @version 3.3.91
  * 
  **/
 App::import('Vendor', 'flashchart/open-flash-chart');
@@ -876,7 +877,7 @@ class FlashChartHelper extends AppHelper {
                 $axis_object->set_labels_from_array($labels);
 			}
 		} elseif (isset($options['labels']) && is_array($options['labels']) && $axis == 'x') {
-            if (isset($options['vertical']) && $options['vertical'] == true) {            
+            if ($labelsOptions['vertical'] == true) {            
                 $x_axis_label = new x_axis_labels;           
                 $x_axis_label->set_vertical();          
                 $x_axis_label->set_labels($options['labels']); 
