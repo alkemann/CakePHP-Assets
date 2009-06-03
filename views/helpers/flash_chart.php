@@ -216,10 +216,10 @@
  * @contributor Eskil Mjelvaa Saadtvedt
  * @contributor Carl Erik Fyllingen
  * @contributor Korcan
- * @modified 6 mar. 2009 by Alexander
+ * @modified 23 april 2009 by jelle.henkens
  * @category Cake Helper
  * @license MIT
- * @version 3.3.8
+ * @version 3.3.9
  * 
  **/
 App::import('Vendor', 'flashchart/open-flash-chart');
@@ -1049,6 +1049,12 @@ class FlashChartHelper extends AppHelper {
             $ret = $this->Javascript->codeBlock('                
                 function to_string(arr) {
                     return Object.toJSON(arr); 
+                }
+            ');
+		} else if(isset($options['mootools'])) {
+		     $ret = $this->Javascript->codeBlock('                
+                function to_string(arr) {
+                    return JSON.encode(arr); 
                 }
             ');
 		} else {
