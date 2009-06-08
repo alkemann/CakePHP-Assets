@@ -1,8 +1,8 @@
 <?php
 
-class x_axis_labels
+class y_axis_labels
 {
-	function x_axis_labels(){}
+	function y_axis_labels(){}
 	
 	/**
 	 * @param $steps which labels are generated
@@ -13,17 +13,8 @@ class x_axis_labels
 	}
 	
 	/**
-	 * @param $steps as integer which labels are visible
-	 */
-	function visible_steps( $steps )
-	{
-		$this->{"visible-steps"} = $steps;
-		return $this;
-	}
-	
-	/**
 	 *
-	 * @param $labels as an array of [x_axis_label or string]
+	 * @param $labels as an array of [y_axis_label or string]
 	 */
 	function set_labels( $labels )
 	{
@@ -54,5 +45,13 @@ class x_axis_labels
 	function rotate( $angle )
 	{
 		$this->rotate = $angle;
+	}
+	
+	/**
+	 * @param $text default text that all labels inherit
+	 */
+	function set_text( $text )
+	{
+		$this->text = $text;
 	}
 }

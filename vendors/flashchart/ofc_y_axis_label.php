@@ -1,16 +1,14 @@
 <?php
 
 /**
- * x_axis_label see x_axis_labels
+ * y_axis_label see y_axis_labels
  */
-class x_axis_label
+class y_axis_label
 {
-	function x_axis_label( $text, $colour, $size, $rotate )
+	function y_axis_label( $y, $text)
 	{
+		$this->y = $y;
 		$this->set_text( $text );
-		$this->set_colour( $colour );
-		$this->set_size( $size );
-		$this->set_rotate( $rotate );
 	}
 	
 	function set_text( $text )
@@ -36,10 +34,5 @@ class x_axis_label
 	function set_vertical()
 	{
 		$this->rotate = "vertical";
-	}
-	
-	function set_visible()
-	{
-		$this->visible = true;
 	}
 }
