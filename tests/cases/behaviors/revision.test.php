@@ -1507,5 +1507,59 @@ class RevisionTestCase extends CakeTestCase {
 		$this->assertError();
 	}
 
+	function testRevisions() {
+		$this->loadFixtures('RevisionPost','RevisionPostsRev');
+
+		$Post = new RevisionPost();
+		
+		$Post->create(array('Post' => array(
+			'title' => 'Stuff (1)',
+			'content' => 'abc'
+		)));
+		$Post->save();
+		$postID = $Post->id;
+
+		$Post->data = null;
+		$Post->id = null;
+		$Post->save(array('Post' => array(
+			'id' => $postID,
+			'title' => 'Things (2)'
+		)));
+
+		$Post->data = null;
+		$Post->id = null;
+		$Post->save(array('Post' => array(
+			'id' => $postID,
+			'title' => 'Machines (3)'
+		)));
+
+
+		$Post->bindModel(array(
+			'hasMany' => array(
+				'Revision' => array(
+						'className' => 'RevisionPostsRev',
+						'foreignKey' => 'id',
+						'order' => 'version_id DESC'
+				)
+			)
+		));
+		$result = $Post->read(null,$postID);
+		$this->assertEqual('Machines (3)',$result['Post']['title']);
+		$this->assertIdentical(3,sizeof($result['Revision']));
+		$this->assertEqual('Machines (3)',$result['Revision'][0]['title']);
+		$this->assertEqual('Things (2)',$result['Revision'][1]['title']);
+		$this->assertEqual('Stuff (1)',$result['Revision'][2]['title']);
+
+		$result = $Post->revisions();
+		$this->assertIdentical(2,sizeof($result));
+		$this->assertEqual('Things (2)',$result[0]['Post']['title']);
+		$this->assertEqual('Stuff (1)',$result[1]['Post']['title']);
+
+		$result = $Post->revisions(array(), true);
+		$this->assertIdentical(3,sizeof($result));
+		$this->assertEqual('Machines (3)',$result[0]['Post']['title']);
+		$this->assertEqual('Things (2)',$result[1]['Post']['title']);
+		$this->assertEqual('Stuff (1)',$result[2]['Post']['title']);
+	}
 }
 ?>
