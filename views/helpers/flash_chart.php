@@ -1,5 +1,5 @@
 <?php
-/** Charts in a flash! - FlashChartHelper version 3.3.92
+/** Charts in a flash! - FlashChartHelper version 3.3.93
  * 
  * The sole purpose of this helper is to integrate OpenFlashChart2 (http://teethgrinder.co.uk/open-flash-chart-2)
  * with cake in an easy to use way. It is based on the work of Joaquin Windmuller and his article on the bakery
@@ -221,7 +221,7 @@
  * @modified 6. okt. 2009
  * @category Cake Helper
  * @license MIT
- * @version 3.3.92
+ * @version 3.3.93
  * 
  **/
 App::import('Vendor', 'flashchart/open-flash-chart');
@@ -497,20 +497,12 @@ class FlashChartHelper extends AppHelper {
 			return false;
 		}	
 		$bar_stack = new bar_stack();
-		$numbers = $this->getNumbers($datasetName);
-		foreach ($numbers as $values) {
-			$tmp = array();
-			if (sizeof($this->stackColours) == sizeof($values)) {
-				foreach ($values as $key => $value) {
-					$tmp[] = new bar_stack_value($value, $this->stackColours[$key]);
-				}
-			} else {
-				$tmp = $values;
-			}
-			$bar_stack->append_stack($tmp);
+		$bar_stack->set_colours($this->stackColours);
+		foreach ($this->data[$datasetName] as $values) {
+			$bar_stack->append_stack($values);
 		}
     if (!empty($this->tooltip) ) {
-      $element->set_tooltip($this->tooltip);
+      $bar_stack->set_tooltip($this->tooltip);
     }
 		foreach ($options as $key => $setting) {
 			$set_method = 'set_' . $key;
@@ -736,8 +728,13 @@ class FlashChartHelper extends AppHelper {
 		if (!empty($options)) {
 			$tool_tip_object = new tooltip();
 			foreach ($options as $key => $setting) {
-				$set_method = 'set_' . $key;
-				$tool_tip_object->$set_method($setting);
+        if (is_string($key)) {
+          $set_method = 'set_' . $key;
+          $tool_tip_object->$set_method($setting);
+				} else {
+          $set_method = 'set_' . $setting;
+          $tool_tip_object->$set_method();				
+				}
 			}
 			$this->Chart->set_tooltip($tool_tip_object);
 		}
