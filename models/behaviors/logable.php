@@ -447,9 +447,7 @@ class LogableBehavior extends ModelBehavior
     	} elseif (isset($Model->data[$Model->alias][$Model->displayField])) {
     		$logData['Log']['title'] = $Model->data[$Model->alias][$Model->displayField];
     	} else {
-    		$Model->recursive = -1;
-    		$Model->read(array($Model->displayField));
-    		$logData['Log']['title'] = $Model->data[$Model->alias][$Model->displayField];
+    		$logData['Log']['title'] = $Model->field($Model->displayField);
     	}
     		
     	if (isset($this->Log->_schema[$this->settings[$Model->alias]['classField']])) {
