@@ -340,7 +340,10 @@ class LogableBehavior extends ModelBehavior
     
 	function beforeSave(&$Model) {
         if (isset($this->Log->_schema['change']) && $Model->id) {
-        	$this->old = $Model->find('first',array('conditions'=>array($Model->primaryKey => $Model->id),'recursive'=>-1));
+        	$this->old = $Model->find('first',array('conditions'=>array(
+				$Model->alias .'.'. $Model->primaryKey => $Model->id),
+				'recursive'=>-1
+			));
         }
         return true;
 	}
