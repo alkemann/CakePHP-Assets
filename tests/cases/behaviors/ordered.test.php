@@ -1,5 +1,5 @@
 <?php
-//App::import('behavior', 'Ordered');
+
 class OrderedBook extends CakeTestModel {
 	public $name = 'OrderedBook';
 	public $actsAs = array('Ordered' => array('foreign_key' => FALSE, 'field' => 'weight'));
@@ -713,9 +713,9 @@ class OrderedCase extends CakeTestCase {
 		    'Fourth Page' => 4,
 		);
 		$this->assertEqual($expected,$result);
-		
+
 		$this->assertTrue($this->Page->delete(4));
-		
+
 		$result = $this->Page->find('list', array(
       'conditions' => array('book_id' => 1),
       'fields'=>array('title','weight')));
@@ -726,35 +726,35 @@ class OrderedCase extends CakeTestCase {
 		);
 		$this->assertEqual($expected,$result);
 	}
-/**/
+
+	/**
+	 * test changed foreign_key
+	 *
+	 * @author cyberlussi 2010-09
+	 */
+	function testPageChangeBook() {
+
+	    $this->Page->read('id', 1);
+        $this->Page->set('book_id', 2);
+        $this->Page->save();
+
+        $result = $this->Page->find('all', array('conditions'=>array('book_id'=>2)));
+        $expected = array(
+            0 => Array('OrderedPage' => Array('id' => 3, 'title' => 'Front Page',   'book_id' => 2, 'weight' => 1 )),
+            1 => Array('OrderedPage' => Array('id' => 6, 'title' => 'Intro Page',   'book_id' => 2, 'weight' => 2 )),
+            2 => Array('OrderedPage' => Array('id' => 1, 'title' => 'Second Page',  'book_id' => 2, 'weight' => 3 ))
+        );
+        $this->assertEqual($expected, $result);
+
+        $result = $this->Page->find('all', array('conditions'=>array('book_id'=>1)));
+        $expected = array(
+            0 => Array('OrderedPage' => Array('id' => 2, 'title' => 'First Page',   'book_id' => 1, 'weight' => 1 )),
+            1 => Array('OrderedPage' => Array('id' => 4, 'title' => 'Third Page',   'book_id' => 1, 'weight' => 2 )),
+            2 => Array('OrderedPage' => Array('id' => 5, 'title' => 'Fourth Page',  'book_id' => 1, 'weight' => 3 ))
+        );
+        $this->assertEqual($expected, $result);
+	}
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ?>

@@ -1,6 +1,6 @@
 <?php
 /**
- * OrderedBehavior 2.2.2
+ * OrderedBehavior 2.2.3
  *
  *
  * This behavior lets you order items in a very similar way to the tree
@@ -91,10 +91,21 @@
  * in the table). Now there will only be one set of weights. (Note you need the weight
  * field as normal)
  * 
+ * Version 2.2.3
+ * 
+ * - moveto:
+ *      read model before fetching highest (fixing failed moveto
+ *      without a previous model read)
+ *
+ * - beforeSave:
+ *      added handling of changed foreign_key (change weights of
+ *      old SET consistently)
+ *
+ *
  * @author Alexander Morland aka alkemann
  * @license MIT
- * @version 2.2.2
- * @modified 29. jan 2009
+ * @version 2.2.3
+ * @modified 09 2010 cyberlussi
  * 
  */
 class OrderedBehavior extends ModelBehavior {
@@ -576,6 +587,14 @@ class OrderedBehavior extends ModelBehavior {
 					&& 
 				!is_numeric($Model->data[$Model->alias][$this->settings[$Model->alias]['field']]) 
 			) 
+			    || // foreign_key changed
+		   (
+		        $this->settings[$Model->alias]['foreign_key']
+                    &&
+		        isset($Model->data[$Model->alias][$this->settings[$Model->alias]['foreign_key']])
+                    &&
+		        ($Model->data[$Model->alias][$this->settings[$Model->alias]['foreign_key']] != $Model->field($this->settings[$Model->alias]['foreign_key']))
+		   )
 		) {
 			$fk = null;
 			if ($this->settings[$Model->alias]['foreign_key']) {
@@ -584,6 +603,15 @@ class OrderedBehavior extends ModelBehavior {
 					return false;					
 				}
 				$fk = $Model->data[$Model->alias][$this->settings[$Model->alias]['foreign_key']];
+				// foreign_key changed
+                if ($fk != $Model->field($this->settings[$Model->alias]['foreign_key'])) {
+                   // move down all items with old foreign_key and weight > weight of changed item
+                   $conditions = array(
+                      $Model->alias . '.' . $this->settings[$Model->alias]['foreign_key'] => $Model->field($this->settings[$Model->alias]['foreign_key']),
+                      $Model->alias . '.' . $this->settings[$Model->alias]['field'] . ' >' => $Model->field($this->settings[$Model->alias]['field'])
+                   );
+                   $Model->updateAll(array($this->settings[$Model->alias]['field'] => $Model->alias . '.' . $this->settings[$Model->alias]['field'] . ' - 1'), $conditions);
+                }
 			}
 			$Model->data[$Model->alias][$this->settings[$Model->alias]['field']] = $this->_newWeight($Model,$fk);
 		}
