@@ -569,6 +569,7 @@ class OrderedBehavior extends ModelBehavior {
 		if (!empty($Model->data) && ($Model->data[$Model->alias][$Model->primaryKey] == $highest[$Model->alias][$Model->primaryKey])) {
 			$Model->data = null;
 		}
+		return true;
 	}
 	/**
 	 * Sets the weight for new items so they end up at end
