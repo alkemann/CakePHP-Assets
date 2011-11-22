@@ -521,7 +521,7 @@ class RevisionBehavior extends ModelBehavior {
 			foreach ($associated as $assoc => $data) {
 				
 				/* Continue with next association if no shadow model */
-				if (empty($Model->ShadowModel)) {
+				if (empty($Model->$assoc->ShadowModel)) {
 					continue;
 				}
 				
