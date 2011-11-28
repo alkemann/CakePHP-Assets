@@ -519,6 +519,12 @@ class RevisionBehavior extends ModelBehavior {
 		if ($cascade) {		
 			$associated = array_merge($Model->hasMany, $Model->hasOne);
 			foreach ($associated as $assoc => $data) {
+				
+				/* Continue with next association if no shadow model */
+				if (empty($Model->$assoc->ShadowModel)) {
+					continue;
+				}
+				
 				$ids = array();
 				
 				$cascade = false;
