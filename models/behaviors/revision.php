@@ -808,7 +808,7 @@ class RevisionBehavior extends ModelBehavior {
 		}   
 		if ($created) {
 			$Model->ShadowModel->create($Model->data,true);
-			$Model->ShadowModel->set('id',$Model->id);
+			$Model->ShadowModel->set($Model->primaryKey,$Model->id);
 			$Model->ShadowModel->set('version_created',date('Y-m-d H:i:s'));
 			foreach ($Model->data as $alias => $alias_data) {
 				if (isset($Model->ShadowModel->_schema[$alias])) {
